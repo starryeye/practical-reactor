@@ -129,10 +129,12 @@ public class c1_Introduction extends IntroductionBase {
 
         serviceResult
                 .doOnNext(companyList::add)
-        //todo: add an operator here, don't use any blocking operator!
+                .subscribe()
         ;
 
         Thread.sleep(1000); //bonus: can you explain why this line is needed?
+        // answer : 지금 코드 상으로는 publishOn, subscribeOn 등이 없으므로 모두 main 스레드로 동작하여 Thread.sleep 이 필요하지 않을 수 있다.
+        // 하지만, fortuneTop5() 내부에서 만약에 DB 를 접근하던가 외부 API 를 호출함으로 인해서 다른 스레드로 교체 된다고 가정하면 Thread.sleep(1000) 은 타당하다.
 
         assertEquals(Arrays.asList("Walmart", "Amazon", "Apple", "CVS Health", "UnitedHealth Group"), companyList);
     }

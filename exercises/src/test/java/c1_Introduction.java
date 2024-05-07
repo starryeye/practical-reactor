@@ -2,6 +2,7 @@ import org.junit.jupiter.api.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -55,7 +56,7 @@ public class c1_Introduction extends IntroductionBase {
         Exception exception = assertThrows(IllegalStateException.class, () -> {
             Mono<String> serviceResult = unresponsiveService();
 
-            String result = serviceResult.block();
+            String result = serviceResult.block(Duration.ofSeconds(1)); // publisher 로 부터 데이터가 1초 내로 안오면 "Timeout on blocking read for 1" 메시지를 가지는 IllegalStateException 을 발생 시킴
         });
 
         String expectedMessage = "Timeout on blocking read for 1";

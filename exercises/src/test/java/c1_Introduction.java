@@ -41,7 +41,7 @@ public class c1_Introduction extends IntroductionBase {
     public void hello_world() {
         Mono<String> serviceResult = hello_world_service();
 
-        String result = null; //todo: change this line only
+        String result = serviceResult.block();
 
         assertEquals("Hello World!", result);
     }
@@ -55,7 +55,7 @@ public class c1_Introduction extends IntroductionBase {
         Exception exception = assertThrows(IllegalStateException.class, () -> {
             Mono<String> serviceResult = unresponsiveService();
 
-            String result = null; //todo: change this line only
+            String result = serviceResult.block();
         });
 
         String expectedMessage = "Timeout on blocking read for 1";

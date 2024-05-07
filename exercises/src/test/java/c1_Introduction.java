@@ -155,8 +155,21 @@ public class c1_Introduction extends IntroductionBase {
         CopyOnWriteArrayList<String> companyList = new CopyOnWriteArrayList<>();
 
         fortuneTop5()
-        //todo: change this line only
+                .subscribe(
+                        companyList::add,
+                        e -> {},
+                        () -> serviceCallCompleted.set(true)
+                )
         ;
+
+        /**
+         * fortuneTop5()
+         *  .collectList()
+         *  .map(companyList::addAll)
+         *  .doAfterTerminate(() -> serviceCallCompleted.set(true))
+         *  .subscribe();
+         * 이런 느낌으로도 가능하지만, doXXX 후크를 사용하지 말라고 했으므로 오답이다.
+         */
 
         Thread.sleep(1000);
 

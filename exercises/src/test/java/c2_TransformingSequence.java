@@ -47,8 +47,17 @@ public class c2_TransformingSequence extends TransformingSequenceBase {
     public void transforming_sequence_2() {
         Flux<Integer> numbersFlux = numerical_service_2();
 
-        //todo: do your changes here
-        Flux<String> resultSequence = null;
+        Flux<String> resultSequence = numbersFlux.map(
+                integer -> {
+                    if (integer > 0) {
+                        return ">";
+                    } else if (integer == 0) {
+                        return "=";
+                    } else {
+                        return "<";
+                    }
+                }
+        );
 
         //don't change code below
         StepVerifier.create(resultSequence)

@@ -103,9 +103,9 @@ public class c2_TransformingSequence extends TransformingSequenceBase {
      */
     @Test
     public void sequence_sum() {
-        //todo: change code as you need
-        Mono<Integer> sum = null;
-        numerical_service();
+        Mono<Integer> sum = numerical_service()
+                .reduce(0, Integer::sum); // reduce 는 stream 에도 존재하는 연산자이다.
+
 
         //don't change code below
         StepVerifier.create(sum)

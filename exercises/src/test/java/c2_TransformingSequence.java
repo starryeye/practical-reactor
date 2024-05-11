@@ -74,7 +74,8 @@ public class c2_TransformingSequence extends TransformingSequenceBase {
     @Test
     public void cast() {
         Flux<String> numbersFlux = object_service()
-                .cast(String.class);
+                .cast(String.class)
+                ;
 
 
         StepVerifier.create(numbersFlux)
@@ -104,7 +105,8 @@ public class c2_TransformingSequence extends TransformingSequenceBase {
     @Test
     public void sequence_sum() {
         Mono<Integer> sum = numerical_service()
-                .reduce(0, Integer::sum); // reduce 는 stream 에도 존재하는 연산자이다.
+                .reduce(0, Integer::sum)
+                ; // reduce 는 stream 에도 존재하는 연산자이다.
 
 
         //don't change code below

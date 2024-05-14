@@ -43,7 +43,7 @@ public class c3_FilteringSequence extends FilteringSequenceBase {
     public void needle_in_a_haystack() {
         Flux<String> strings = mashed_data_service()
                 .ofType(String.class)
-                ; // https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Flux.html#ofType
+                ; // https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Flux.html#ofType-java.lang.Class-
 
         StepVerifier.create(strings)
                     .expectNext("1", "String.class")
@@ -56,8 +56,8 @@ public class c3_FilteringSequence extends FilteringSequenceBase {
     @Test
     public void economical() {
         Flux<String> items = duplicated_records_service()
-                //todo: change this line only, use only one operator
-                ;
+                .distinct()
+                ; // https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Flux.html#distinct--
 
         StepVerifier.create(items)
                     .expectNext("1", "2", "3", "4", "5")

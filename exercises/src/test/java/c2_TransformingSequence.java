@@ -128,10 +128,14 @@ public class c2_TransformingSequence extends TransformingSequenceBase {
          * scan 연산자는 스트림의 각 요소를 처리하여 누적값을 계산한다.
          * 각 단계에서 누적값과 현재 요소를 사용하여 새로운 누적값을 생성하고 내보낸다.
          * 즉, scan은 각 단계의 중간 누적 결과를 방출하는 것. 이는 최종 결과만 방출하는 reduce와 다른 느낌임
+         *
+         * public final Flux<T> scan(BiFunction<T, T, T> accumulator)
+         * - 초기값 없이 첫번째 요소를 초기값으로 사용함
+         * public final <A> Flux<A> scan(A initial, BiFunction<A, ? super T, A> accumulator)
+         * - 초기값을 정해주고 초기값 부터 내보냄
+         * - 두번째 방식의 예시 .scan(0, (accumulator, current) -> accumulator + current)
+         * 이렇게 하면 0 부터 내보내게되긴하고, accumulator 가 누적 값이라 생각하면된다. (출력, 0, 1, 3, 3, 6, 10, 15, 21, 28, 36, 45, 55)
          */
-        // public final Flux<T> scan(BiFunction<T, T, T> accumulator) // 초기값 없이 첫번째 요소를 초기값으로 사용함
-        // public final <A> Flux<A> scan(A initial, BiFunction<A, ? super T, A> accumulator) // 초기값을 정해주고 초기값 부터 내보냄
-        // -> 두번째 방식의 예시 .scan(0, (accumulator, current) -> accumulator + current) 이렇게 하면 0 부터 내보내게되긴하고, accumulator 가 누적 값이라 생각하면된다.
 
         StepVerifier.create(sumEach)
                     .expectNext(1, 3, 6, 10, 15, 21, 28, 36, 45, 55)

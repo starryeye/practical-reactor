@@ -72,9 +72,9 @@ public class c3_FilteringSequence extends FilteringSequenceBase {
      */
     @Test
     public void watch_out_for_the_spiders() {
-        //todo: change code as you need
-        Mono<String> firstResult = Mono.empty();
-        fragile_service();
+        Mono<String> firstResult = fragile_service()
+                .next()
+                ; // https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Flux.html#next--
 
         //don't change code below
         StepVerifier.create(firstResult)

@@ -102,7 +102,7 @@ public class c3_FilteringSequence extends FilteringSequenceBase {
     @Test
     public void not_a_binary_search() {
         Flux<Integer> numbers = number_service()
-                //todo: change this line only
+                .takeLast(100)
                 ;
 
         StepVerifier.create(numbers)

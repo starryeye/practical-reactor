@@ -152,8 +152,15 @@ public class c2_TransformingSequence extends TransformingSequenceBase {
     @Test
     public void sequence_starts_with_zero() {
         Flux<Integer> result = numerical_service()
-                //todo: change this line only
+                .startWith(0) // 처음에 끼워 넣기
                 ;
+
+        /**
+         * startWith
+         * public final Flux<T> startWith(T... values)
+         * public final Flux<T> startWith(Iterable<? extends T> iterable)
+         * public final Flux<T> startWith(Publisher<? extends T> publisher)
+         */
 
         StepVerifier.create(result)
                     .expectNext(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)

@@ -39,7 +39,7 @@ public class c5_CreatingSequence {
     @Test
     public void value_I_already_have_mono() {
         String valueIAlreadyHave = "value";
-        Mono<String> valueIAlreadyHaveMono = null; //todo: change this line only
+        Mono<String> valueIAlreadyHaveMono = Mono.just(valueIAlreadyHave);
 
         StepVerifier.create(valueIAlreadyHaveMono)
                     .expectNext("value")

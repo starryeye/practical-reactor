@@ -93,15 +93,15 @@ public class c4_LifecycleHooks extends LifecycleHooksBase {
     }
 
     /**
-     * Add a hook that will execute when `temperatureFlux` has completed without errors. As a side effect set
-     * `completed` flag to true.
+     * Add a hook that will execute when `temperatureFlux` has completed without errors.
+     * As a side effect set `completed` flag to true.
      */
     @Test
     public void successfully_executed() {
         AtomicBoolean completed = new AtomicBoolean(false);
 
         Flux<Integer> temperatureFlux = room_temperature_service()
-                //todo: change this line only
+                .doOnComplete(() -> completed.set(true))
                 ;
 
         StepVerifier.create(temperatureFlux.skip(20))

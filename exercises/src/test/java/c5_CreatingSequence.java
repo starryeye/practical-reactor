@@ -67,7 +67,10 @@ public class c5_CreatingSequence {
     @Test
     public void optional_value() {
         Optional<String> optionalValue = Optional.of("optional");
-        Mono<String> optionalMono = null; //todo: change this line only
+        Mono<String> optionalMono = Mono.justOrEmpty(optionalValue);
+        // justOrEmpty 는 Optional 도 파라미터로 받게끔 오버로딩 되어있다.
+        // Create a new Mono that emits the specified item if Optional.isPresent() otherwise only emits onComplete.
+        // https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Mono.html#justOrEmpty-java.util.Optional-
 
         StepVerifier.create(optionalMono)
                     .expectNext("optional")

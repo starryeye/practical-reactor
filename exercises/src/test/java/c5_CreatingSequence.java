@@ -99,13 +99,32 @@ public class c5_CreatingSequence {
      * Convert Future task to Mono.
      */
     @Test
-    public void future_counter() {
+    public void future_counter() throws InterruptedException {
         AtomicInteger futureCounter = new AtomicInteger(0);
         CompletableFuture<Integer> completableFuture = CompletableFuture.supplyAsync(() -> {
-            System.out.println("You are incrementing a counter via Future!");
+            System.out.println("[" + Thread.currentThread().getName() + "]" + "You are incrementing a counter via Future!");
             return futureCounter.incrementAndGet();
         });
-        Mono<Integer> futureCounterMono = null; //todo: change this line only
+
+        Thread.sleep(1000);
+        System.out.println("is completableFuture: " + completableFuture.isDone());
+
+        Mono<Integer> futureCounterMono = Mono.fromFuture(completableFuture)
+                .doOnNext(i -> System.out.println("[" + Thread.currentThread().getName() + "]" + "doOnNext: " + i));
+
+        /**
+         * completableFuture 로그는 ForkJoinPool.commonPool 로 찍힌다.
+         * 그리고..
+         * todo, doOnNext 의 로그가 main 스레드로 찍힌다..
+         * 그럼 fromFuture 는 map 처럼 동기식 연산자인가.. ?
+         * 나는.. doOnNext 로그가 ForkJoinPool.commonPool 로 찍힐 것으로 예상했다..
+         *
+         * 좀 생각해보니..
+         * 동기식 연산자로 생각된다..
+         * completableFuture 는 supplyAsync 연산자 호출 순간 이미 실행을 한다.
+         * StepVerifier 의 subscribe 에 의해 실행 되지 않음
+         * 따라서 fromFuture 실행할 땐 이미 결과가 존재하고 그것을 item 으로 흘려보내기만 하면 되는듯..
+         */
 
         StepVerifier.create(futureCounterMono)
                     .expectNext(1)

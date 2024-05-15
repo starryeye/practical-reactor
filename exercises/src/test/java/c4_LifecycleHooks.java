@@ -50,16 +50,16 @@ public class c4_LifecycleHooks extends LifecycleHooksBase {
     }
 
     /**
-     * Add a hook that will execute before Flux `temperatureFlux` is subscribed too. As a side effect hook should add
-     * string "before subscribe" to `hooksTriggered` list.
+     * Add a hook that will execute before Flux `temperatureFlux` is subscribed too.
+     * As a side effect hook should add string "before subscribe" to `hooksTriggered` list.
      */
     @Test
     public void be_there_early() {
         CopyOnWriteArrayList<String> hooksTriggered = new CopyOnWriteArrayList<>();
 
         Flux<Integer> temperatureFlux = room_temperature_service()
-                //todo: change this line only
-                ;
+                .doFirst(() -> hooksTriggered.add("before subscribe"))
+                ; // doOnSubscribe 보다 빠른 이벤트는 doFirst 이다.
 
         StepVerifier.create(temperatureFlux.take(5).doOnSubscribe(s -> hooksTriggered.add("subscribe")))
                     .expectNextCount(5)

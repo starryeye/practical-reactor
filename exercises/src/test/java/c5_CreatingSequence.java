@@ -52,7 +52,10 @@ public class c5_CreatingSequence {
     @Test
     public void potentially_null_mono() {
         String potentiallyNull = null;
-        Mono<String> potentiallyNullMono = null; //todo change this line only
+        Mono<String> potentiallyNullMono = Mono.justOrEmpty(potentiallyNull);
+        // justOrEmpty 는 item 이 null 이면 onComplete 를 발생시키고 아니면 item 을 내보내고 onComplete 를 발생시킨다.
+        // just 로 하면 NPE 발생한다..
+        // https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Mono.html#justOrEmpty-T-
 
         StepVerifier.create(potentiallyNullMono)
                     .verifyComplete();

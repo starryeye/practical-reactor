@@ -88,7 +88,7 @@ public class c5_CreatingSequence {
             return callableCounter.incrementAndGet();
         };
 
-        Mono<Integer> callableCounterMono = null; //todo: change this line only
+        Mono<Integer> callableCounterMono = Mono.fromCallable(callable);
 
         StepVerifier.create(callableCounterMono.repeat(2))
                     .expectNext(1, 2, 3)

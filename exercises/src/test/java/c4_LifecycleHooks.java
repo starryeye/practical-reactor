@@ -140,8 +140,8 @@ public class c4_LifecycleHooks extends LifecycleHooksBase {
         AtomicInteger hooksTriggeredCounter = new AtomicInteger(0);
 
         Flux<Integer> temperatureFlux = room_temperature_service()
-                //todo: change this line only
-                ;
+                .doOnTerminate(hooksTriggeredCounter::incrementAndGet)
+                ; // take(0) 이면 cancel 되는데 이를 제외하곤 모두 terminate 이벤트가 발생하여 hooksTriggeredCounter 가 증가된다.
 
         StepVerifier.create(temperatureFlux.take(0))
                     .expectNextCount(0)

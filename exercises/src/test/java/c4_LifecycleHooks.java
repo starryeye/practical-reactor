@@ -37,8 +37,10 @@ public class c4_LifecycleHooks extends LifecycleHooksBase {
         CopyOnWriteArrayList<String> hooksTriggered = new CopyOnWriteArrayList<>();
 
         Flux<Integer> temperatureFlux = room_temperature_service()
-                //todo: change this line only
-                ;
+                .doOnSubscribe(i -> hooksTriggered.add("subscribe"))
+                ; // when Flux `temperatureFlux` is subscribed too. 이므로 doOnSubscribe 이벤트에서 처리한다.
+        // temperatureFlux 내부에서 무슨 값이 전달되든 상관없이 temperatureFlux 가 subscribe 이벤트가 발생되면
+        // hooksTriggered 에 "subscribe" 를 add 한다.
 
         StepVerifier.create(temperatureFlux.take(5))
                     .expectNextCount(5)

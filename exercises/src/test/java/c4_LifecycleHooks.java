@@ -112,15 +112,15 @@ public class c4_LifecycleHooks extends LifecycleHooksBase {
     }
 
     /**
-     * Add a hook that will execute when `temperatureFlux` is canceled by the subscriber. As a side effect set
-     * `canceled` flag to true.
+     * Add a hook that will execute when `temperatureFlux` is canceled by the subscriber.
+     * As a side effect set `canceled` flag to true.
      */
     @Test
     public void need_to_cancel() {
         AtomicBoolean canceled = new AtomicBoolean(false);
 
         Flux<Integer> temperatureFlux = room_temperature_service()
-                //todo: change this line only
+                .doOnCancel(() -> canceled.set(true))
                 ;
 
         StepVerifier.create(temperatureFlux.take(0))

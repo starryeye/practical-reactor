@@ -69,15 +69,20 @@ public class c4_LifecycleHooks extends LifecycleHooksBase {
     }
 
     /**
-     * Add a hook that will execute for each element emitted by `temperatureFlux`. As a side effect print out the value
-     * using `System.out` and increment `counter` value.
+     * Add a hook that will execute for each element emitted by `temperatureFlux`.
+     * As a side effect print out the value using `System.out` and increment `counter` value.
      */
     @Test
     public void atomic_counter() {
         AtomicInteger counter = new AtomicInteger(0);
 
         Flux<Integer> temperatureFlux = room_temperature_service()
-                //todo: change this line only
+                .doOnNext(
+                        i -> {
+                            counter.incrementAndGet();
+                            System.out.println("counter : " + counter + ", current : " + i);
+                        }
+                )
                 ;
 
         StepVerifier.create(temperatureFlux)

@@ -154,7 +154,7 @@ public class c5_CreatingSequence {
      */
     @Test
     public void acknowledged() {
-        Mono<String> acknowledged = null; //todo: change this line only
+        Mono<String> acknowledged = Mono.empty();
 
         StepVerifier.create(acknowledged)
                     .verifyComplete();

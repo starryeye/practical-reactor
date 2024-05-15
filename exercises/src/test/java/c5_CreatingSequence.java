@@ -141,7 +141,7 @@ public class c5_CreatingSequence {
             runnableCounter.incrementAndGet();
             System.out.println("You are incrementing a counter via Runnable!");
         };
-        Mono<Integer> runnableMono = null; //todo: change this line only
+        Mono<Integer> runnableMono = Mono.fromRunnable(runnable);
 
         StepVerifier.create(runnableMono.repeat(2))
                     .verifyComplete();

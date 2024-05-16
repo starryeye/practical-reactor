@@ -230,7 +230,10 @@ public class c5_CreatingSequence {
      */
     @Test
     public void interval() {
-        Flux<Long> interval = null; //todo: change this line only
+        Flux<Long> interval = Flux.interval(Duration.ofSeconds(1));
+        // 아래도 동일..
+//        Flux<Long> interval = Flux.fromIterable(List.of(0L, 1L, 2L))
+//                        .delayElements(Duration.ofSeconds(1));
 
         System.out.println("Interval: ");
         StepVerifier.create(interval.take(3).doOnNext(System.out::println))

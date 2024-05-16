@@ -165,7 +165,8 @@ public class c5_CreatingSequence {
      */
     @Test
     public void seen() {
-        Mono<String> seen = null; //todo: change this line only
+        Mono<String> seen = Mono.never();
+        // https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Mono.html#never--
 
         StepVerifier.create(seen.timeout(Duration.ofSeconds(5)))
                     .expectSubscription()

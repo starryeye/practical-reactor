@@ -179,7 +179,7 @@ public class c5_CreatingSequence {
      */
     @Test
     public void trouble_maker() {
-        Mono<String> trouble = null; //todo: change this line
+        Mono<String> trouble = Mono.error(new IllegalStateException());
 
         StepVerifier.create(trouble)
                     .expectError(IllegalStateException.class)

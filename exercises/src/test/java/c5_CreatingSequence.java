@@ -218,7 +218,7 @@ public class c5_CreatingSequence {
     @Test
     public void from_stream() {
         Stream<String> stream = Stream.of("5", "6", "7", "8", "9");
-        Flux<String> streamFlux = null; //todo: change this line only
+        Flux<String> streamFlux = Flux.fromStream(stream);
 
         StepVerifier.create(streamFlux)
                     .expectNext("5", "6", "7", "8", "9")

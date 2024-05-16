@@ -205,7 +205,7 @@ public class c5_CreatingSequence {
     @Test
     public void from_list() {
         List<String> list = Arrays.asList("1", "2", "3", "4", "5");
-        Flux<String> listFlux = null; //todo: change this line only
+        Flux<String> listFlux = Flux.fromIterable(list);
 
         StepVerifier.create(listFlux)
                     .expectNext("1", "2", "3", "4", "5")

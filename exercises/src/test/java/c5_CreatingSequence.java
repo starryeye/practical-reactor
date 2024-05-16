@@ -192,7 +192,7 @@ public class c5_CreatingSequence {
     @Test
     public void from_array() {
         Integer[] array = {1, 2, 3, 4, 5};
-        Flux<Integer> arrayFlux = null; //todo: change this line only
+        Flux<Integer> arrayFlux = Flux.fromArray(array);
 
         StepVerifier.create(arrayFlux)
                     .expectNext(1, 2, 3, 4, 5)

@@ -251,7 +251,7 @@ public class c5_CreatingSequence {
      */
     @Test
     public void range() {
-        Flux<Integer> range = null; //todo: change this line only
+        Flux<Integer> range = Flux.range(-5, 11);
 
         System.out.println("Range: ");
         StepVerifier.create(range.doOnNext(System.out::println))
@@ -260,13 +260,15 @@ public class c5_CreatingSequence {
     }
 
     /**
-     * Create Callable that increments the counter and returns the counter value, and then use `repeat()` operator to create Flux that emits
-     * values from 0 to 10.
+     * Create Callable that increments the counter and returns the counter value, and then
+     * use `repeat()` operator to create Flux that emits values from 0 to 10.
      */
     @Test
     public void repeat() {
         AtomicInteger counter = new AtomicInteger(0);
-        Flux<Integer> repeated = null; //todo: change this line
+        Flux<Integer> repeated = Mono.fromCallable(counter::incrementAndGet)
+                        .repeat(9); // mono publisher 를 여러번 subscribe 하여 flux publisher 로 만든다..
+        // https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Mono.html#repeat--
 
         System.out.println("Repeat: ");
         StepVerifier.create(repeated.doOnNext(System.out::println))

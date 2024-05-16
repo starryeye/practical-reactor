@@ -3,3 +3,4 @@
 `mvn hint:needle_in_a_haystack`
 `mvn hint:seen`
 `mvn hint:interval`
+`mvn hint:repeat`

@@ -354,7 +354,7 @@ public class c5_CreatingSequence {
     @Test
     public void multi_threaded_producer() {
         //todo: find a bug and fix it!
-        Flux<Integer> producer = Flux.push(sink -> {
+        Flux<Integer> producer = Flux.create(sink -> { // push 를 사용하면 sink.next 가 thread-safe 하지 않게 동작하여 몇몇이 씹힌다..
             for (int i = 0; i < 100; i++) {
                 int finalI = i;
                 new Thread(() -> sink.next(finalI)).start(); //don't change this line!
@@ -364,7 +364,7 @@ public class c5_CreatingSequence {
         //do not change code below
         StepVerifier.create(producer
                                     .doOnNext(System.out::println)
-                                    .take(100))
+                                    .take(100)) // take 연산자 덕분에 create 연산자 내부에서 onComplete 이벤트를 발행하지 않아도 됨
                     .expectNextCount(100)
                     .verifyComplete();
     }

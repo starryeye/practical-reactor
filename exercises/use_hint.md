@@ -4,3 +4,4 @@
 `mvn hint:seen`
 `mvn hint:interval`
 `mvn hint:repeat`
+`mvn hint:generate_programmatically`

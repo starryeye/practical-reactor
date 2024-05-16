@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -277,8 +278,8 @@ public class c5_CreatingSequence {
     }
 
     /**
-     * Following example is just a basic usage of `generate,`create`,`push` sinks. We will learn how to use them in a
-     * more complex scenarios when we tackle backpressure.
+     * Following example is just a basic usage of `generate,`create`,`push` sinks.
+     * We will learn how to use them in a more complex scenarios when we tackle backpressure.
      *
      * Answer:
      * - What is difference between `generate` and `create`?
@@ -287,31 +288,62 @@ public class c5_CreatingSequence {
     @Test
     public void generate_programmatically() {
 
+        /**
+         * generate : 동기적으로 동작하며, 상태 기반의 값을 순차적으로 생성
+         * create : 멀티 스레드 환경에서 비동기적으로 값을 생성하고 방출 (이벤트 드리븐 방식의 데이터를 처리할 때 유용)
+         * push : 단일 스레드 환경에서 비동기적으로 값을 생성하고 방출 (단일 스레드 기반의 프로듀싱 작업에 유용)
+         */
+
+        AtomicInteger counter = new AtomicInteger(0);
         Flux<Integer> generateFlux = Flux.generate(sink -> {
-            //todo: fix following code so it emits values from 0 to 5 and then completes
+            // 이전 상태에 관심이 있으므로 동기적이라 할 수 있다.. 해당 코드 블럭은 순차적으로 한번씩 여러번 수행된다.
+            if(counter.get() > 5) {
+                System.out.println("[generate] onComplete, tx=" + Thread.currentThread().getName());
+                sink.complete();
+            }
+            System.out.println("[generate] onNext=" + counter.get() + ", tx=" + Thread.currentThread().getName());
+            sink.next(counter.getAndIncrement());
         });
 
         //------------------------------------------------------
 
         Flux<Integer> createFlux = Flux.create(sink -> {
-            //todo: fix following code so it emits values from 0 to 5 and then completes
+            // 해당 코드블럭에서 멀티 스레드로 sink.next 를 호출해볼 수 있다. create 연산자의 마블 다이어그램을 보자!
+            IntStream.range(0, 6)
+                    .forEach(
+                            i -> {
+                                System.out.println("[create] onNext=" + i + ", tx=" + Thread.currentThread().getName());
+                                sink.next(i);
+                            }
+                    );
+            System.out.println("[create] onComplete, tx=" + Thread.currentThread().getName());
+            sink.complete();
         });
 
         //------------------------------------------------------
 
         Flux<Integer> pushFlux = Flux.push(sink -> {
-            //todo: fix following code so it emits values from 0 to 5 and then completes
+            // 해당 코드 블럭은 1개의 스레드로 동작해야만한다?
+            IntStream.range(0, 6)
+                    .forEach(
+                            i -> {
+                                System.out.println("[push] onNext=" + i + ", tx=" + Thread.currentThread().getName());
+                                sink.next(i);
+                            }
+                    );
+            System.out.println("[push] onComplete, tx=" + Thread.currentThread().getName());
+            sink.complete();
         });
 
-        StepVerifier.create(generateFlux)
+        StepVerifier.create(generateFlux.doOnNext(i -> System.out.println("[generate] doOnNext=" + i + ", tx=" + Thread.currentThread().getName())))
                     .expectNext(0, 1, 2, 3, 4, 5)
                     .verifyComplete();
 
-        StepVerifier.create(createFlux)
+        StepVerifier.create(createFlux.doOnNext(i -> System.out.println("[create] doOnNext=" + i + ", tx=" + Thread.currentThread().getName())))
                     .expectNext(0, 1, 2, 3, 4, 5)
                     .verifyComplete();
 
-        StepVerifier.create(pushFlux)
+        StepVerifier.create(pushFlux.doOnNext(i -> System.out.println("[push] doOnNext=" + i + ", tx=" + Thread.currentThread().getName())))
                     .expectNext(0, 1, 2, 3, 4, 5)
                     .verifyComplete();
     }

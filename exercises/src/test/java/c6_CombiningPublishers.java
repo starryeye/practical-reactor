@@ -146,7 +146,7 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
      */
     @Test
     public void task_executor_again() {
-        //todo: feel free to change code as you need
+
         Flux<Void> tasks = taskExecutor()
 //                .flatMapSequential(Function.identity())
                 .concatMap(Function.identity());
@@ -174,13 +174,12 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
      */
     @Test
     public void need_for_speed() {
-        //todo: feel free to change code as you need
-        Flux<String> stonks = null;
-        getStocksGrpc();
-        getStocksRest();
+
+        Flux<String> stocks = Flux.firstWithValue(getStocksGrpc(), getStocksRest());
+        // 첫번째 아이템이 빨리 도착하는 스트림을 택한다.
 
         //don't change below this line
-        StepVerifier.create(stonks)
+        StepVerifier.create(stocks)
                     .expectNextCount(5)
                     .verifyComplete();
     }

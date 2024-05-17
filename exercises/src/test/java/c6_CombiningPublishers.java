@@ -57,9 +57,21 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
      */
     @Test
     public void task_executor() {
-        //todo: feel free to change code as you need
-        Flux<Void> tasks = null;
-        taskExecutor();
+        Flux<Void> tasks = taskExecutor()
+                .flatMap(Function.identity()); // 충격적인 내부 껍질 까기 방법!!!!!
+        // taskExecutor 내부 코드를 보면 10 개의 Mono 를 멀티스레드(parallel) 로 subscribe 하여 값을 방출한다.
+        // -> tasks flux 입장에서는 taskExecutor 내부의 값 순서 보장이 안된다.
+
+        /**
+         * Mono 의 flatMap
+         * 단일 값 Mono 에서 시작하여, 각 값에 대해 새로운 Mono 를 생성 (최종 요소 개수 1)
+         *
+         * Flux 의 flatMap
+         * Flux(N 개의 요소) 에서 시작하여, 각 값에 대해 새로운 publisher(M 개의 요소) 를 생성합니다. (최종 요소 개수 N * M)
+         *
+         * 공통점
+         * flatMap 은 호출 스레드 응답 스레드가 다를 수 있어서 비동기로 동작한다고 표현가능
+         */
 
         //don't change below this line
         StepVerifier.create(tasks)

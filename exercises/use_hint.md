@@ -5,3 +5,4 @@
 `mvn hint:interval`
 `mvn hint:repeat`
 `mvn hint:generate_programmatically`
+`mvn hint:task_executor`

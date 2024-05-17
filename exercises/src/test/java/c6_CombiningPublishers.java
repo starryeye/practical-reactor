@@ -147,8 +147,18 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
     @Test
     public void task_executor_again() {
         //todo: feel free to change code as you need
-        Flux<Void> tasks = null;
-        taskExecutor();
+        Flux<Void> tasks = taskExecutor()
+//                .flatMapSequential(Function.identity())
+                .concatMap(Function.identity());
+
+        /**
+         * merge, concat, mergeSequential 3 개의 연산자 관계는
+         * flatMap, concatMap, flatMapSequential 3 개의 연산자 관계와 굉장히 유사하다.
+         * 순서없음, 순서있음, 순서있음
+         * 병렬가능, 병렬안됨, 병렬가능
+         *
+         * 마블 다이어그램을 보면 이해가 잘 될 것이다.
+         */
 
         //don't change below this line
         StepVerifier.create(tasks)

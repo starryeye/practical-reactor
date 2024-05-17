@@ -57,17 +57,26 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
      */
     @Test
     public void task_executor() {
-        Flux<Void> tasks = taskExecutor()
-                .flatMap(Function.identity()); // 충격적인 내부 껍질 까기 방법!!!!!
-        // taskExecutor 내부 코드를 보면 10 개의 Mono 를 멀티스레드(parallel) 로 subscribe 하여 값을 방출한다.
-        // -> tasks flux 입장에서는 taskExecutor 내부의 값 순서 보장이 안된다.
+        Flux<Void> tasks = taskExecutor() // Flux<Mono<Void>>
+                .flatMap(Function.identity()); // Mono<Void> 를 수행하고 Flux 로 통합한다.
+        // Mono<Void> 를 수행하면 아이템은 없고 완료 이벤트만 downstream 으로 전달된다..
+        // 최종 결과 타입도 Mono<Void> 에서 아이템을 전달하지 않기 때문에 Flux<Void> 가 된다.
+        // 참고 - identity 의 의미 : 전달된 아이템인 Mono<Void> 를(flatMap 첫번째 타입 파라미터) 그대로 두번째 타입 파라미터인 publisher 로 사용하겠다는 의미
+
+        // 비동기 처리: 각 Mono<Void>는 별도의 스레드(여기서는 Schedulers.parallel() 를 사용)에서 실행된다.
+        // 따라서 각 작업의 완료 시점은 서로 다를 수 있으며, flatMap 은 이러한 비동기 완료 이벤트들을 동기화하여 하나의 Flux 로 통합한다.
+
+        // 동작 논리
+        // StepVerifier 에 의해 Flux<Void> 가 수행되고
+        // Flux<Void> 는 Mono<Void> 를 수행시킨 결과를 받는 stream 이다.
+        // Mono<Void> 는 taskExecutor 내부에 subscribeOn 에 의해 Schedulers.parallel() 가 수행한다.
 
         /**
          * Mono 의 flatMap
          * 단일 값 Mono 에서 시작하여, 각 값에 대해 새로운 Mono 를 생성 (최종 요소 개수 1)
          *
          * Flux 의 flatMap
-         * Flux(N 개의 요소) 에서 시작하여, 각 값에 대해 새로운 publisher(M 개의 요소) 를 생성합니다. (최종 요소 개수 N * M)
+         * Flux(N 개의 요소) 에서 시작하여, 각 값에 대해 새로운 publisher(M 개의 요소) 를 생성 (최종 요소 개수 N * M)
          *
          * 공통점
          * flatMap 은 호출 스레드 응답 스레드가 다를 수 있어서 비동기로 동작한다고 표현가능
@@ -88,9 +97,8 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
      */
     @Test
     public void streaming_service() {
-        //todo: feel free to change code as you need
-        Flux<Message> messageFlux = null;
-        streamingService();
+        Flux<Message> messageFlux = streamingService() // Mono<Flux<Message>>
+                .flatMapMany(Function.identity()); // Flux<Message> 를 수행하면서 나오는 아이템과 이벤트를 방출한다.
 
         //don't change below this line
         StepVerifier.create(messageFlux)

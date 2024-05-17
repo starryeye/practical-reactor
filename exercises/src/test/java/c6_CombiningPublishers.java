@@ -177,6 +177,7 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
 
         Flux<String> stocks = Flux.firstWithValue(getStocksGrpc(), getStocksRest());
         // 첫번째 아이템이 빨리 도착하는 스트림을 택한다.
+        // 다른 스트림은 취소한다.
 
         //don't change below this line
         StepVerifier.create(stocks)

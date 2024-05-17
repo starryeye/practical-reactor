@@ -115,15 +115,20 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
      */
     @Test
     public void i_am_rubber_you_are_glue() {
-        //todo: feel free to change code as you need
-        Flux<Integer> numbers = null;
-        numberService1();
-        numberService2();
+
+//        Flux<Integer> numbersFirstWay = Flux.concat(numberService1(), numberService2());
+        Flux<Integer> numbersFirstWay = numberService1().concatWith(numberService2());
+
+        Flux<Integer> numbersSecondWay = Flux.mergeSequential(numberService1(), numberService2());
+
 
         //don't change below this line
-        StepVerifier.create(numbers)
+        StepVerifier.create(numbersFirstWay)
                     .expectNext(1, 2, 3, 4, 5, 6, 7)
                     .verifyComplete();
+        StepVerifier.create(numbersSecondWay)
+                .expectNext(1, 2, 3, 4, 5, 6, 7)
+                .verifyComplete();
     }
 
     /**

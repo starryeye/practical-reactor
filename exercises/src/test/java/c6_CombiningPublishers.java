@@ -291,15 +291,19 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
     }
 
     /**
-     * Execute all tasks sequentially and after each task have been executed, commit task changes. Don't lose id's of
-     * committed tasks, they are needed to further processing!
+     * Execute all tasks sequentially and after each task have been executed, commit task changes.
+     * Don't lose id's of committed tasks, they are needed to further processing!
      */
     @Test
     public void acid_durability() {
         //todo: feel free to change code as you need
-        Flux<String> committedTasksIds = null;
-        tasksToExecute();
-        commitTask(null);
+        Flux<String> committedTasksIds = tasksToExecute()
+                .flatMapSequential( // solution 에서는 concatMap 을 사용함
+                        task -> task.flatMap(
+                                taskId -> commitTask(taskId)
+                                        .thenReturn(taskId)
+                        )
+                );
 
         //don't change below this line
         StepVerifier.create(committedTasksIds)

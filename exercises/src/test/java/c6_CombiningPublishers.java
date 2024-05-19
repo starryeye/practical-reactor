@@ -192,10 +192,9 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
      */
     @Test
     public void plan_b() {
-        //todo: feel free to change code as you need
-        Flux<String> stonks = null;
-        getStocksLocalCache();
-        getStocksRest();
+        
+        Flux<String> stonks = getStocksLocalCache()
+                .switchIfEmpty(getStocksRest());
 
         //don't change below this line
         StepVerifier.create(stonks)

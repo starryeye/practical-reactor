@@ -408,7 +408,7 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
      * This may look easy...
      */
     @Test
-    public void cleanup() {
+    public void cleanup() throws InterruptedException {
         BlockHound.install(); //don't change this line, blocking = cheating!
         // 실행을 위해서.. VM options 에.. "-XX:+AllowRedefinitionToAddDeleteMethods" 추가해줘야함
 
@@ -421,16 +421,22 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
         // https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Flux.html#usingWhen-org.reactivestreams.Publisher-java.util.function.Function-java.util.function.Function-java.util.function.BiFunction-java.util.function.Function-
 
 
-        // 이렇게 해야하는거 아닌가.. 모든 connection 을 각각 닫아주는..
+        // 이건 왜 안되지 (시간을 주면 되긴함, onFinally 가 onComplete 보다 늦어서 안될 때가 많은 것임..)
 //        Flux<String> stream = StreamingConnection.startStreaming()
 //                .flatMapMany(Function.identity())
-//                .doOnNext(signalType -> StreamingConnection.closeConnection().subscribe());
+////                .doFinally(signalType -> StreamingConnection.closeConnection().subscribe())
+//                        .doOnComplete(() -> StreamingConnection.closeConnection().subscribe());
+
+
 
         //don't change below this line
         StepVerifier.create(stream)
                     .then(()-> Assertions.assertTrue(StreamingConnection.isOpen.get()))
                     .expectNextCount(20)
                     .verifyComplete();
+
+//        Thread.sleep(1000);
+
         Assertions.assertTrue(StreamingConnection.cleanedUp.get());
     }
 }

@@ -192,7 +192,7 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
      */
     @Test
     public void plan_b() {
-        
+
         Flux<String> stonks = getStocksLocalCache()
                 .switchIfEmpty(getStocksRest());
 

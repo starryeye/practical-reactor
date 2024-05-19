@@ -410,11 +410,21 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
     @Test
     public void cleanup() {
         BlockHound.install(); //don't change this line, blocking = cheating!
+        // 실행을 위해서.. VM options 에.. "-XX:+AllowRedefinitionToAddDeleteMethods" 추가해줘야함
 
-        //todo: feel free to change code as you need
-        Flux<String> stream = StreamingConnection.startStreaming()
-                                                 .flatMapMany(Function.identity());
-        StreamingConnection.closeConnection();
+        Flux<String> stream = Flux.usingWhen(
+                StreamingConnection.startStreaming(), //resource supplier -> supplies Flux from Mono
+                Function.identity(),//resource closure  -> closure in this case is same as Flux completion
+                tr -> StreamingConnection.closeConnection()//<-async complete, executes asynchronously after closure
+        );
+        // usingWhen
+        // https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Flux.html#usingWhen-org.reactivestreams.Publisher-java.util.function.Function-java.util.function.Function-java.util.function.BiFunction-java.util.function.Function-
+
+
+        // 이렇게 해야하는거 아닌가.. 모든 connection 을 각각 닫아주는..
+//        Flux<String> stream = StreamingConnection.startStreaming()
+//                .flatMapMany(Function.identity())
+//                .doOnNext(signalType -> StreamingConnection.closeConnection().subscribe());
 
         //don't change below this line
         StepVerifier.create(stream)

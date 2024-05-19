@@ -210,10 +210,17 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
      */
     @Test
     public void mail_box_switcher() {
-        //todo: feel free to change code as you need
-        Flux<Message> myMail = null;
-        mailBoxPrimary();
-        mailBoxSecondary();
+
+        Flux<Message> myMail = mailBoxPrimary()
+                .switchOnFirst(
+                        (first, mailBoxPrimary)-> {
+                            if (first.get().metaData.contains("spam")) {
+                                return mailBoxSecondary();
+                            } else {
+                                return mailBoxPrimary;
+                            }
+                        }
+                );
 
         //don't change below this line
         StepVerifier.create(myMail)

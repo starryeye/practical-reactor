@@ -6,3 +6,4 @@
 `mvn hint:repeat`
 `mvn hint:generate_programmatically`
 `mvn hint:task_executor`
+`mvn hint:instant_search`

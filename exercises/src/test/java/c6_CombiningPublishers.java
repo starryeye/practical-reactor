@@ -240,11 +240,11 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
      */
     @Test
     public void instant_search() {
-        //todo: feel free to change code as you need
-        autoComplete(null);
+
         Flux<String> suggestions = userSearchInput()
-                //todo: use one operator only
-                ;
+                .switchMap(this::autoComplete)
+                ; // Flux(userSearchInput) 가 아이템을 방출할 때마다 함수(autoComplete)를 통해 생성된 새로운 publisher 로 전환
+        // flatMap 과 비슷한데 flatMap 은 새로운 publisher 로 전환하지 않고 publisher 를 계속 추가하는 방식이다.
 
         //don't change below this line
         StepVerifier.create(suggestions)

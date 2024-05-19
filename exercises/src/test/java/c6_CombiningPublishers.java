@@ -296,7 +296,7 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
      */
     @Test
     public void acid_durability() {
-        //todo: feel free to change code as you need
+
         Flux<String> committedTasksIds = tasksToExecute()
                 .flatMapSequential( // solution 에서는 concatMap 을 사용함
                         task -> task.flatMap(

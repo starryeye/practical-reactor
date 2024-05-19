@@ -320,10 +320,10 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
      */
     @Test
     public void major_merger() {
-        //todo: feel free to change code as you need
-        Flux<String> microsoftBlizzardCorp =
-                microsoftTitles();
-        blizzardTitles();
+
+        Flux<String> microsoftBlizzardCorp = microsoftTitles()
+                .mergeWith(blizzardTitles());
+//        Flux<String> microsoftBlizzardCorp = Flux.merge(microsoftTitles(), blizzardTitles());
 
         //don't change below this line
         StepVerifier.create(microsoftBlizzardCorp)

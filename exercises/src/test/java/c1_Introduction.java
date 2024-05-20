@@ -73,7 +73,10 @@ public class c1_Introduction extends IntroductionBase {
     public void empty_service() {
         Mono<String> serviceResult = emptyService();
 
-        Optional<String> optionalServiceResult = serviceResult.blockOptional(); // todo, serviceResult.map(Optional::ofNullable).block(); 로 하면 안되는 이유는?
+        Optional<String> optionalServiceResult = serviceResult.blockOptional();
+        // serviceResult.map(Optional::ofNullable).block(); 로 하면 안되는 이유는?
+        // -> emptyService() 에서 Mono.empty() 로 처리가 되면 map 은 스킵되고 block 에 의해 optionalServiceResult 가 null 이된다.
+//        System.out.println(optionalServiceResult == null);
 
         assertTrue(optionalServiceResult.isEmpty());
         assertTrue(emptyServiceIsCalled.get());

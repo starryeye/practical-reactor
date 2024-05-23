@@ -3,6 +3,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -34,8 +35,8 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
     public void houston_we_have_a_problem() {
         AtomicReference<Throwable> errorRef = new AtomicReference<>();
         Flux<String> heartBeat = probeHeartBeatSignal()
-                //todo: do your changes here
-                //todo: & here
+                .timeout(Duration.ofSeconds(3)) // 3 초 안에 item 이 도착하지 않으면 에러이다.
+                .doOnError(errorRef::set) // 에러를 errorRef 에 저장한다.
                 ;
 
         StepVerifier.create(heartBeat)

@@ -41,7 +41,7 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
 
         StepVerifier.create(heartBeat)
                     .expectNextCount(3)
-                    .expectError(TimeoutException.class)
+                    .expectError(TimeoutException.class) // timeout 에 걸리면 발생하는 예외는 TimeoutException.class 이다.
                     .verify();
 
         Assertions.assertTrue(errorRef.get() instanceof TimeoutException);
@@ -85,10 +85,9 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
      */
     @Test
     public void have_a_backup() {
-        //todo: feel free to change code as you need
-        Flux<String> messages = null;
-        messageNode();
-        backupMessageNode();
+
+        Flux<String> messages = messageNode()
+                .onErrorResume(e -> backupMessageNode()); // 예외 발생 시, backupMessageNode() 로 대체한다.
 
         //don't change below this line
         StepVerifier.create(messages)

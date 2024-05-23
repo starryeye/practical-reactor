@@ -55,7 +55,7 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
     @Test
     public void potato_potato() {
         Mono<String> currentUser = getCurrentUser()
-                //todo: change this line only
+                .onErrorMap(SecurityException::new) // 예외 발생시, 다른 예외로 전환시킨다.
                 //use SecurityException
                 ;
 

@@ -71,9 +71,8 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
      */
     @Test
     public void under_the_rug() {
-        Flux<String> messages = messageNode();
-        //todo: change this line only
-        ;
+        Flux<String> messages = messageNode()
+                .onErrorResume(e -> Mono.empty()); // 예외가 도착하면 Mono.empty(바로 완료처리) 로 변경하여 방출한다.
 
         StepVerifier.create(messages)
                     .expectNext("0x1", "0x2")

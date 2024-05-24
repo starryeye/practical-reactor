@@ -124,7 +124,12 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
     @Test
     public void unit_of_work() {
         Flux<Task> taskFlux = taskQueue()
-                //todo: do your changes here
+                .flatMap( // flatMap 으로 item(task) 에 접근
+                        task -> task.execute() // task 를 수행한다.
+                                .then(task.commit()) // onComplete 시 task.commit 수행
+                                .onErrorResume(task::rollback) // onError 시 rollback 수행
+                                .thenReturn(task) // onComplete 시 task 를 리턴하여 StepVerifier 에서 무언가 검증한다.
+                )
                 ;
 
         StepVerifier.create(taskFlux)

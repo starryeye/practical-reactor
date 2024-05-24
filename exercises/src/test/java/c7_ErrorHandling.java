@@ -171,19 +171,46 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
      * Quote from one of creators of Reactor: onErrorContinue is my billion-dollar mistake. `onErrorContinue` is
      * considered as a bad practice, its unsafe and should be avoided.
      *
-     * {@see <a href="https://nurkiewicz.com/2021/08/onerrorcontinue-reactor.html">onErrorContinue</a>} {@see <a
-     * href="https://devdojo.com/ketonemaniac/reactor-onerrorcontinue-vs-onerrorresume">onErrorContinue vs
-     * onErrorResume</a>} {@see <a href="https://bsideup.github.io/posts/daily_reactive/where_is_my_exception/">Where is
-     * my exception?</a>}
+     * <p>See:</p>
+     * <ul>
+     *   <li><a href="https://nurkiewicz.com/2021/08/onerrorcontinue-reactor.html">onErrorContinue</a></li>
+     *   <li><a href="https://devdojo.com/ketonemaniac/reactor-onerrorcontinue-vs-onerrorresume">onErrorContinue vs onErrorResume</a></li>
+     *   <li><a href="https://bsideup.github.io/posts/daily_reactive/where_is_my_exception/">Where is my exception?</a></li>
+     * </ul>
      *
      * Your task is to implement `onErrorContinue()` behaviour using `onErrorResume()` operator,
      * by using knowledge gained from previous lessons.
      */
     @Test
     public void resilience() {
-        //todo: change code as you need
+
+//        Flux<String> content = getFilesContent()
+//                .flatMap(Function.identity())
+//                .doOnError(e -> System.out.println("Error occur.. from = " + e))
+//                .onErrorResume(e -> Mono.empty())
+//                ;
+
+        // 위 코드와 다른점?
+        // -> 위 코드는 flatMap 내부에 onErrorResume 이 있는게 아니고 외부에 있다. 그래서 onErrorResume 을 수행하면 바로 전체 stream 이 Mono.empty 로 대체된다.
+        // 반면, 아래 코드는 flatMap 내부에 onErrorResume 이 있으므로 file 한개에 대해 한개가 예외가 발생하면 한개만 완료되고 나머지는 정상 수행된다.
+        // flatMap, onErrorResume 의 마블 다이어그램을 보면 쉽게 와닿을 수 있음
         Flux<String> content = getFilesContent()
-                .flatMap(Function.identity()); //start from here
+                .flatMap(
+                        file -> file.doOnError(e -> System.out.println("Error occur.. from = " + e))
+                                .onErrorResume(e -> Mono.empty())
+                );
+
+        /**
+         * - onErrorContinue 메서드의 문제점
+         *      - 에러를 무시하고 계속 진행하기 때문에 디버깅이 어렵고, 예기치 않은 동작을 유발할 수 있다.
+         * - onErrorContinue 대신.. onErrorResume 메서드를 사용하자
+         *      - 에러가 발생하면 대체 스트림을 제공하여 안전하게 에러를 처리한다.
+         * 적절한 예외 처리 예외를 명확하게 기록하고, 대체 데이터를 제공하여 시스템의 안정성을 유지하는 것이 중요하다.
+         *
+         * onErrorContinue 메서드의 사용을 피하고,
+         * 더 안전하고 유지보수하기 쉬운 코드 작성을 위해 onErrorResume을 사용하여
+         * 에러 처리 로직을 명확히 하고, 시스템의 안정성과 신뢰성을 높이도록 하자.
+         */
 
         //don't change below this line
         StepVerifier.create(content)

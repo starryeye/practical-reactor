@@ -2,6 +2,7 @@ import org.junit.jupiter.api.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import reactor.util.retry.Retry;
 
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
@@ -240,8 +241,9 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
      */
     @Test
     public void back_off() {
-        Mono<String> connection_result = establishConnection()
-                //todo: change this line only
+
+        Mono<String> connection_result = establishConnection() // 최초에 연결 시도 시, 실패고 5초 후에 연결 시도 시 성공하도록 구현되어있는 publisher 인듯..
+                .retryWhen(Retry.backoff(3, Duration.ofSeconds(2)))
                 ;
 
         StepVerifier.create(connection_result)

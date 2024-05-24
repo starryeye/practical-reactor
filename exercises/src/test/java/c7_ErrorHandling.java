@@ -258,9 +258,11 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
      */
     @Test
     public void good_old_polling() {
-        //todo: change code as you need
-        Flux<String> alerts = null;
-        nodeAlerts();
+
+        Flux<String> alerts = nodeAlerts()
+                .repeatWhenEmpty(it -> it.delayElements(Duration.ofSeconds(1))) // nodeAlerts 에서 empty 로 오면 수행하는 연산자.. empty 로 오면 1초 후에 다시 수행하도록 한다.
+                .repeat() // empty 가 아니더라도 nodeAlerts 를 반복 수행시킨다.
+                ;
 
         //don't change below this line
         StepVerifier.create(alerts.take(2))

@@ -6,6 +6,7 @@ import reactor.test.StepVerifier;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
@@ -145,9 +146,20 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
      */
     @Test
     public void billion_dollar_mistake() {
+
         Flux<String> content = getFilesContent()
                 .flatMap(Function.identity())
-                //todo: change this line only
+                .onErrorContinue(
+                        (throwable, o) -> System.out.println("Error occur.. from = " + o + ", error message = " + throwable.getMessage())
+                )
+//                .onErrorContinue(
+//                        new BiConsumer<Throwable, Object>() {
+//                            @Override
+//                            public void accept(Throwable throwable, Object o) {
+//                                System.out.println("Error occur.. from = " + o + ", error message = " + throwable.getMessage());
+//                            }
+//                        }
+//                )
                 ;
 
         StepVerifier.create(content)

@@ -101,9 +101,12 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
      */
     @Test
     public void error_reporter() {
-        //todo: feel free to change code as you need
-        Flux<String> messages = messageNode();
-        errorReportService(null);
+
+        Flux<String> messages = messageNode()
+                .onErrorResume(
+                        e -> errorReportService(e) // 예외 발생 시, errorReportService() 를 수행
+                                .then(Mono.error(e)) // 그 이후 발생된 예외를 그대로 downstream 으로 방출
+                );
 
         //don't change below this line
         StepVerifier.create(messages)

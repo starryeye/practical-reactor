@@ -225,8 +225,8 @@ public class c7_ErrorHandling extends ErrorHandlingBase {
     @Test
     public void its_hot_in_here() {
         Mono<Integer> temperature = temperatureSensor()
-                //todo: change this line only
-                ;
+                .retry()
+                ; // 정상 item 이 도착하여 Mono 가 complete 될 때 까지 retry
 
         StepVerifier.create(temperature)
                     .expectNext(34)

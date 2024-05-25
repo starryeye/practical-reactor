@@ -3,6 +3,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 import reactor.test.StepVerifier;
+import reactor.util.concurrent.Queues;
 
 import java.time.Duration;
 import java.util.List;
@@ -43,6 +44,8 @@ public class c8_Sinks extends SinksBase {
         });
 
         /**
+         * https://projectreactor.io/docs/core/release/reference/#sinks
+         *
          * Sinks 정의..
          * "Sinks" are constructs through which Reactive Streams signals can be programmatically pushed,
          * with Flux or Mono semantics.
@@ -156,8 +159,16 @@ public class c8_Sinks extends SinksBase {
     @Test
     public void open_24_7() {
         //todo: set autoCancel parameter to prevent sink from closing
-        Sinks.Many<Integer> sink = Sinks.many().multicast().onBackpressureBuffer();
+        Sinks.Many<Integer> sink = Sinks.many().multicast().onBackpressureBuffer(Queues.SMALL_BUFFER_SIZE, false);
         Flux<Integer> flux = sink.asFlux();
+
+        /**
+         * todo,
+         *  onBackpressureBuffer autoCancel 의 의미..
+         *  verifyLater() 를 사용하고 나중에 verify() 를 한번에 한 이유?
+         *  "first measurement `0x0800` was already consumed by previous subscribers" 라 설명하는데 subscriber2 에서는 첫 item 을 어떻게..?
+         *  -> onBackpressureBuffer 로 하면 다 캐싱 되어있는거 아닌가..
+         */
 
         //don't change code below
         submitOperation(() -> {

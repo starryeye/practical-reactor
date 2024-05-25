@@ -38,12 +38,13 @@ public class c8_Sinks extends SinksBase {
 
         Mono<Boolean> operationCompleted = sink.asMono();
         submitOperation(() -> {
-            doSomeWork(); //don't change this line
-            sink.tryEmitValue(true);
+            doSomeWork(); //don't change this line, 이 메서드가 레거시 코드 동작 부분이다.(동기 blocking)
+            sink.tryEmitValue(true); // 레거시 코드가 끝나면 완료 이벤트를 발행한다.
         });
 
         /**
-         * Sinks are constructs through which Reactive Streams signals can be programmatically pushed,
+         * Sinks 정의..
+         * "Sinks" are constructs through which Reactive Streams signals can be programmatically pushed,
          * with Flux or Mono semantics.
          */
 
@@ -61,12 +62,31 @@ public class c8_Sinks extends SinksBase {
      */
     @Test
     public void single_subscriber() {
-        //todo: feel free to change code as you need
-        Flux<Integer> measurements = null;
+
+        Sinks.Many<Integer> sink = Sinks.many().multicast().onBackpressureBuffer();
+
+        Flux<Integer> measurements = sink.asFlux();
         submitOperation(() -> {
 
-            List<Integer> measures_readings = get_measures_readings(); //don't change this line
+            List<Integer> measures_readings = get_measures_readings(); //don't change this line, 이 메서드가 레거시 코드 동작 부분이다.(동기 blocking)
+
+            measures_readings.forEach(sink::tryEmitNext); // 리스트의 아이템을 순차적으로 stream 아이템으로 방출
+            sink.tryEmitComplete(); // stream 완료 이벤트 방출
         });
+
+        /**
+         * Sinks.Many<Integer> sink:
+         *  - 여러 값을 방출할 수 있는 Sink를 정의, 이 경우 Integer 타입의 값을 방출
+         * Sinks.many():
+         * 	- Sinks 클래스에서 다수의 값을 방출할 수 있는 Many 타입의 Sink를 생성하는 팩토리 메서드이다.
+         * multicast():
+         * 	- multicast() 는 여러 구독자가 Sink에 구독할 수 있도록 함. 즉, 여러 구독자가 이 Sink 에서 방출하는 값을 받을 수 있다. (해당 테스트에서 구독자는 StepVerifier 하나이다.)
+         * 	- multicast() 는 모든 구독자에게 동일한 값을 방출. 이는 멀티캐스트 방식으로, 하나의 데이터 소스를 여러 구독자에게 공유하는 것을 의미한다.
+         * onBackpressureBuffer():
+         * 	- 백프레셔 상황에서 값을 버퍼에 저장하도록 설정. 백프레셔는 데이터 생산 속도가 소비 속도보다 빠를 때 발생하는 문제
+         * 	- onBackpressureBuffer() 는 이러한 상황에서 방출되지 않은 값을 버퍼에 저장하여 구독자가 데이터를 처리할 수 있을 때까지 유지.
+         * 	- 이는 데이터 유실을 방지하고, 소비자가 데이터를 처리할 수 있을 때까지 값을 버퍼링하는 방식으로 시스템을 안정적으로 유지될 수 있도록 한다.
+         */
 
         //don't change code below
         StepVerifier.create(measurements

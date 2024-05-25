@@ -46,6 +46,21 @@ public class c8_Sinks extends SinksBase {
          * Sinks 정의..
          * "Sinks" are constructs through which Reactive Streams signals can be programmatically pushed,
          * with Flux or Mono semantics.
+         *
+         * Sinks.one() 을 사용하면 단일 값을 방출하는 Mono 타입의 Sink가 생성
+         *
+         * Sinks의 목적:
+         * 	- 수동으로 신호를 생성하고 이를 구독자에게 전달하는 기능을 제공
+         * 	- Sinks.One 은 단일 값을 방출하며, Sinks.Many 는 다수의 값을 방출
+         * Thread Safety:
+         * 	- Reactor 의 Sinks 는 다중 스레드 환경에서 안전하게 사용할 수 있도록 설계됨
+         * 	- tryEmitXXX API는 병렬 호출 시 빠르게 실패하고, emitXXX API는 제공된 EmissionFailureHandler를 통해 경쟁 상태를 처리할 수 있음
+         * Sink 유형:
+         * 	- many().multicast(): 여러 구독자에게 새롭게 푸시된 데이터를 전송. 구독자들은 구독 후에 푸시된 데이터만 수신
+         * 	- many().unicast(): 첫 번째 구독자가 구독하기 전에 푸시된 데이터를 버퍼링하고, 이후에 한 명의 구독자에게만 데이터를 전송
+         * 	- many().replay(): 지정된 히스토리 크기만큼의 데이터를 캐시하여 새 구독자에게 재생하고, 이후 새 데이터를 계속 푸시
+         * 	- one(): 단일 요소를 방출하며, 이를 구독자에게 전달
+         * 	- empty(): 단일 완료 신호 또는 오류 신호를 방출
          */
 
         //don't change code below
@@ -80,12 +95,13 @@ public class c8_Sinks extends SinksBase {
          * Sinks.many():
          * 	- Sinks 클래스에서 다수의 값을 방출할 수 있는 Many 타입의 Sink를 생성하는 팩토리 메서드이다.
          * multicast():
-         * 	- multicast() 는 여러 구독자가 Sink에 구독할 수 있도록 함. 즉, 여러 구독자가 이 Sink 에서 방출하는 값을 받을 수 있다. (해당 테스트에서 구독자는 StepVerifier 하나이다.)
-         * 	- multicast() 는 모든 구독자에게 동일한 값을 방출. 이는 멀티캐스트 방식으로, 하나의 데이터 소스를 여러 구독자에게 공유하는 것을 의미한다.
+         * 	- 여러 값을 방출하고, 이를 여러 구독자에게 "동일하게" 전달한다. -> Hot stream 이 되도록한다. (해당 테스트에서 구독자는 StepVerifier 하나이다.)
+         * 	- 참고로 Mono, Flux 은 기본적으로 Cold stream 이다.
          * onBackpressureBuffer():
          * 	- 백프레셔 상황에서 값을 버퍼에 저장하도록 설정. 백프레셔는 데이터 생산 속도가 소비 속도보다 빠를 때 발생하는 문제
          * 	- onBackpressureBuffer() 는 이러한 상황에서 방출되지 않은 값을 버퍼에 저장하여 구독자가 데이터를 처리할 수 있을 때까지 유지.
          * 	- 이는 데이터 유실을 방지하고, 소비자가 데이터를 처리할 수 있을 때까지 값을 버퍼링하는 방식으로 시스템을 안정적으로 유지될 수 있도록 한다.
+         * 	- 마블 다이어그램을 보면 이해가 빠를 것이다.
          */
 
         //don't change code below
@@ -101,19 +117,34 @@ public class c8_Sinks extends SinksBase {
      */
     @Test
     public void it_gets_crowded() {
-        //todo: feel free to change code as you need
-        Flux<Integer> measurements = null;
-        submitOperation(() -> {
 
-            List<Integer> measures_readings = get_measures_readings(); //don't change this line
+        /**
+         * 문제의 내용에 대해 테스트코드가 이상해서 테스트 코드 자체를 바꿔봤다.
+         */
+
+        // multicast 로 여러 구독자에게 동일한 item 을 동시에 발행, directBestEffort 로 과거 발행된 item 캐싱 없이 hot publisher 로 동작되도록함
+        Sinks.Many<Integer> sink = Sinks.many().multicast().directBestEffort();
+
+        Flux<Integer> measurements = sink.asFlux();
+        submitOperation(() -> { // 5초 후에 동작됨
+
+            List<Integer> measures_readings = get_measures_readings(); //don't change this line, 이 메서드가 레거시 코드 동작 부분이다.(동기 blocking)
+
+            measures_readings.forEach(sink::tryEmitNext);
+            sink.tryEmitComplete();
         });
 
-        //don't change code below
-        StepVerifier.create(Flux.merge(measurements
-                                               .delaySubscription(Duration.ofSeconds(1)),
-                                       measurements.ignoreElements()))
-                    .expectNext(0x0800, 0x0B64, 0x0504)
-                    .verifyComplete();
+        // 구독자 1: 모든 값을 수신
+        StepVerifier.create(measurements)
+                .expectSubscription()
+                .expectNoEvent(Duration.ofSeconds(4))
+                .expectNext(0x0800, 0x0B64, 0x0504) // publisher 에서 발행되기 전에 구독하였으므로 모든 item 을 받음
+                .verifyComplete();
+
+        // 구독자 2: 나중에 구독하여 값을 수신 받지 못함
+        StepVerifier.create(measurements.delaySubscription(Duration.ofSeconds(6))) // publisher 에서 모든 item 과 이벤트가 발행된 이후 구독
+                .expectSubscription()
+                .verifyComplete(); // hot stream 에서 이미 완료 이벤트가 발행된 이후 구독하면 바로 완료 이벤트가 도착한다.
     }
 
     /**

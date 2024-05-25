@@ -27,18 +27,25 @@ import java.util.List;
 public class c8_Sinks extends SinksBase {
 
     /**
-     * You need to execute operation that is submitted to legacy system which does not support Reactive API. You want to
-     * avoid blocking and let subscribers subscribe to `operationCompleted` Mono, that will emit `true` once submitted
-     * operation is executed by legacy system.
+     * You need to execute operation that is submitted to legacy system which does not support Reactive API.
+     * You want to avoid blocking and let subscribers subscribe to `operationCompleted` Mono,
+     * that will emit `true` once submitted operation is executed by legacy system.
      */
     @Test
     public void single_shooter() {
-        //todo: feel free to change code as you need
-        Mono<Boolean> operationCompleted = null;
-        submitOperation(() -> {
 
+        Sinks.One<Boolean> sink = Sinks.one();
+
+        Mono<Boolean> operationCompleted = sink.asMono();
+        submitOperation(() -> {
             doSomeWork(); //don't change this line
+            sink.tryEmitValue(true);
         });
+
+        /**
+         * Sinks are constructs through which Reactive Streams signals can be programmatically pushed,
+         * with Flux or Mono semantics.
+         */
 
         //don't change code below
         StepVerifier.create(operationCompleted.timeout(Duration.ofMillis(5500)))

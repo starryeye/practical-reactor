@@ -158,16 +158,28 @@ public class c8_Sinks extends SinksBase {
      */
     @Test
     public void open_24_7() {
-        //todo: set autoCancel parameter to prevent sink from closing
+
         Sinks.Many<Integer> sink = Sinks.many().multicast().onBackpressureBuffer(Queues.SMALL_BUFFER_SIZE, false);
         Flux<Integer> flux = sink.asFlux();
 
         /**
-         * todo,
-         *  onBackpressureBuffer autoCancel 의 의미..
-         *  verifyLater() 를 사용하고 나중에 verify() 를 한번에 한 이유?
-         *  "first measurement `0x0800` was already consumed by previous subscribers" 라 설명하는데 subscriber2 에서는 첫 item 을 어떻게..?
-         *  -> onBackpressureBuffer 로 하면 다 캐싱 되어있는거 아닌가..
+         * autoCancel 이 true 이면..
+         * - 모든 구독자가 취소되면, 싱크가 내부 버퍼를 비우고 새로운 구독자를 받지 않는다. (기본 값)
+         * autoCancel 이 false 이면..
+         * - 모든 구독자가 취소되더라도, 싱크가 내부 버퍼를 유지하고 새로운 구독자를 받을 수 있다.
+         * 버퍼를 비우지 않고 새로운 구독자를 받아들일 수 있는 것이 주요 차이점이다.
+         *
+         * 참고.
+         * multicast 를 사용했기 때문에 Hot publisher 가 되어서..
+         * item 발행 당시의 모든 구독자가 해당 item 을 모두 소비하면 그 item 은 사라진다.
+         *
+         * 즉, subscriber3 이 첫번째 item 을 받지 못한 이유는..
+         * subscriber1, 2 이 publisher 를 구독하고 첫번째 item 을 소비한 이후에
+         * subscriber3 이 구독을 하여 소비된 첫번째 item 은 못받게 된 것이다.
+         * 여기서, publisher 의 autoCancel 옵션이 false 였기 때문에,
+         * subscriber1, 2 가 모두 구독 취소 한 시점(6 초 이후)에, subscriber3 가 publisher 를 구독해도
+         * 바로 onComplete 되지 않고 소비되지 않은 item 2 개를 받을 수 있는 것이다.
+         *
          */
 
         //don't change code below
@@ -190,12 +202,13 @@ public class c8_Sinks extends SinksBase {
 
         //subscriber3 subscribes after all previous subscribers have cancelled
         StepVerifier sub3 = StepVerifier.create(flux.take(3)
-                                                    .delaySubscription(Duration.ofSeconds(6)))
+                                                    .delaySubscription(Duration.ofSeconds(6))) // 6 초 후, 구독
                                         .expectNext(0x0B64) //first measurement `0x0800` was already consumed by previous subscribers
                                         .expectNext(0x0504)
                                         .expectComplete()
                                         .verifyLater();
 
+        // StepVerifier 실행 설정을 모두 마친후 한번에 실행 시킨다.
         sub1.verify();
         sub2.verify();
         sub3.verify();

@@ -128,6 +128,18 @@ public class c8_Sinks extends SinksBase {
         // multicast 로 여러 구독자에게 동일한 item 을 동시에 발행, directBestEffort 로 과거 발행된 item 캐싱 없이 hot publisher 로 동작되도록함
         Sinks.Many<Integer> sink = Sinks.many().multicast().directBestEffort();
 
+        /**
+         * 사실, onBackpressureBuffer 를 사용해도 test 성공한다.
+         *
+         * multicast 때문에  Hot publisher 가 되어서..
+         * item 발행 당시의 모든 구독자가 해당 item 을 모두 소비하면 그 item 은 사라진다. (onBackpressureBuffer 냐 directBestEffort 이냐 상관 없음)
+         *
+         * onBackpressureBuffer vs directBestEffort
+         * 마블 다이어그램을 보면 바로 알 수 있는데..
+         * onBackpressureBuffer 는 어떤 subscriber 가 구독 시점 이후에 발행된 item 을 모두 받는 개념이고
+         * directBestEffort 는 어떤 subscriber 가 구독 시점이 아닌 item 요청(request) 시점 이후에 발행된 item 을 모두 받는 개념인 듯 하다.
+         */
+
         Flux<Integer> measurements = sink.asFlux();
         submitOperation(() -> { // 5초 후에 동작됨
 
@@ -189,19 +201,19 @@ public class c8_Sinks extends SinksBase {
         });
 
         //subscriber1 subscribes, takes one element and cancels
-        StepVerifier sub1 = StepVerifier.create(Flux.merge(flux.take(1)))
+        StepVerifier sub1 = StepVerifier.create(Flux.merge(flux.take(1).log()))
                                         .expectNext(0x0800)
                                         .expectComplete()
                                         .verifyLater();
 
         //subscriber2 subscribes, takes one element and cancels
-        StepVerifier sub2 = StepVerifier.create(Flux.merge(flux.take(1)))
+        StepVerifier sub2 = StepVerifier.create(Flux.merge(flux.take(1).log()))
                                         .expectNext(0x0800)
                                         .expectComplete()
                                         .verifyLater();
 
         //subscriber3 subscribes after all previous subscribers have cancelled
-        StepVerifier sub3 = StepVerifier.create(flux.take(3)
+        StepVerifier sub3 = StepVerifier.create(flux.take(3).log()
                                                     .delaySubscription(Duration.ofSeconds(6))) // 6 초 후, 구독
                                         .expectNext(0x0B64) //first measurement `0x0800` was already consumed by previous subscribers
                                         .expectNext(0x0504)
@@ -209,9 +221,34 @@ public class c8_Sinks extends SinksBase {
                                         .verifyLater();
 
         // StepVerifier 실행 설정을 모두 마친후 한번에 실행 시킨다.
+        System.out.println("sub verify start");
         sub1.verify();
+        System.out.println("sub1 verify end");
         sub2.verify();
+        System.out.println("sub2 verify end");
         sub3.verify();
+        System.out.println("sub3 verify end");
+
+        /**
+         * todo, 의문점..
+         *  verify 는 각자가 동기 blocking 으로 publisher 를 구독후 수행되는 것으로 알고 있었다..
+         *  그렇게 되면.. 모순이 발생한다. sub1 이 모두 종료되고 sub2 가 수행되므로 sub2 에서 첫번째 item 을 받지 못해야 정상이다..
+         *  그런데.. 로그를 확인해보니.. "sub verity start" 보다 sub1, sub2 의 onSubscribe 로그가 먼저 찍힌다...
+         *
+         * 아래는 AI 답변..
+         * 구독의 시작
+         * - verifyLater()를 사용했을 때, 실제 StepVerifier의 실행은 verify()가 호출될 때까지 지연됩니다.
+         * 하지만 구독 자체는 verifyLater() 호출 시 바로 시작되므로, 각각의 StepVerifier 인스턴스가 생성될 때 구독이 시작됩니다.
+         *
+         * 검증의 순서와 동시성
+         * - 모든 StepVerifier 인스턴스는 verify()가 호출될 때까지 대기합니다. verify() 호출은 동기적이고 순차적으로 실행되므로,
+         * 각 검증은 이전 검증이 완료된 후에 실행됩니다. 하지만 이는 구독 시점에 영향을 미치지 않습니다.
+         *
+         * 로그의 출력 시점
+         * - verifyLater()로 인해 구독이 시작되는 순간부터 관련 로그가 출력될 수 있습니다.
+         * 이는 구독 로직이 verify() 호출과는 독립적으로 먼저 발생하기 때문입니다. 그래서 "sub verify start" 로그가 출력되기 전에
+         * 구독 관련 로그(onSubscribe)가 출력될 수 있습니다.
+         */
     }
 
     /**
@@ -221,9 +258,15 @@ public class c8_Sinks extends SinksBase {
      */
     @Test
     public void blue_jeans() {
-        //todo: enable autoCancel parameter to prevent sink from closing
-        Sinks.Many<Integer> sink = Sinks.many().multicast().onBackpressureBuffer();
+
+        Sinks.Many<Integer> sink = Sinks.many().replay().all();
         Flux<Integer> flux = sink.asFlux();
+
+        /**
+         * .many().replay().all()
+         * 구독자의 구독시점, item 요청시점과 전혀 상관 없이 그냥 cold publisher 로 동작하여
+         * 모든 구독자는 동일한 item 을 제공 받는다.
+         */
 
         //don't change code below
         submitOperation(() -> {

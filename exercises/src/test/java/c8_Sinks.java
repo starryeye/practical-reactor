@@ -235,6 +235,10 @@ public class c8_Sinks extends SinksBase {
          *  그렇게 되면.. 모순이 발생한다. sub1 이 모두 종료되고 sub2 가 수행되므로 sub2 에서 첫번째 item 을 받지 못해야 정상이다..
          *  그런데.. 로그를 확인해보니.. "sub verity start" 보다 sub1, sub2 의 onSubscribe 로그가 먼저 찍힌다...
          *
+         * verifyLater()
+         * Trigger the subscription and prepare for verifications but doesn't block.
+         * https://projectreactor.io/docs/test/release/api/reactor/test/StepVerifier.html#verifyLater--
+         *
          * 아래는 AI 답변..
          * 구독의 시작
          * - verifyLater()를 사용했을 때, 실제 StepVerifier의 실행은 verify()가 호출될 때까지 지연됩니다.

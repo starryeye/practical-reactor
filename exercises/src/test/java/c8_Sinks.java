@@ -311,13 +311,31 @@ public class c8_Sinks extends SinksBase {
      */
     @Test
     public void emit_failure() {
-        //todo: feel free to change code as you need
+
         Sinks.Many<Integer> sink = Sinks.many().replay().all();
+        // todo, .multicast().onBackpressureBuffer() 로 바꾸면.. 순서가 꼬이게 되지만 테스트는 성공이다. 왜그럴까
 
         for (int i = 1; i <= 50; i++) {
             int finalI = i;
-            new Thread(() -> sink.tryEmitNext(finalI)).start();
+            new Thread(
+                    () -> sink.emitNext(
+                            finalI,
+                            (signalType, emitResult) -> emitResult.equals(Sinks.EmitResult.FAIL_NON_SERIALIZED) // 이 타입으로 실패하면 재시도..
+                    )
+            ).start();
         }
+
+        /**
+         * https://projectreactor.io/docs/core/release/reference/#sinks
+         *
+         * When using the "tryEmit* API", parallel calls fail fast.
+         * When using the "emit* API", the provided EmissionFailureHandler may allow to retry on contention (eg. busy looping),
+         * otherwise the sink will terminate with an error.
+         *
+         * -> tryEmit 류 API 는 병렬 호출 시, 실패해버리고 끝이지만, emit 류 API 는 병렬 호출 시, 파라미터로 제공한 핸들러를 기반으로 재시도를 한다.
+         *
+         * https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Sinks.Many.html#emitNext-T-reactor.core.publisher.Sinks.EmitFailureHandler-
+         */
 
         //don't change code below
         StepVerifier.create(sink.asFlux()
@@ -325,5 +343,52 @@ public class c8_Sinks extends SinksBase {
                                 .take(50))
                     .expectNextCount(50)
                     .verifyComplete();
+    }
+
+    /**
+     * 개인 궁금증 해결
+     */
+    @Test
+    public void emit_failure2() {
+
+        Sinks.Many<Integer> sink = Sinks.many().multicast().onBackpressureBuffer(30);
+
+        /**
+         * 원래 문제는 .replay().all(); 였다..
+         * 문제 그대로 실행하면 tryEmit 의 특성 때문에
+         * 병렬로 데이터 방출시 동시성 이슈가 생겨서 몇몇 데이터들이 방출되지 않는 것을 확인할 수 있다.
+         *
+         *
+         * 그런데.. .multicast().onBackpressureBuffer() 로 하면.. 데이터 한개만 방출되고 더이상 뭔가 진행이 안된다..
+         * 무슨 이유?
+         * -> multicast 는 hot publisher 로 만들고.. 당시에 구독자가 없으면 데이터를 방출하지도 않는다.
+         * 따라서, new Thread 로 데이터를 아무리 방출해도 그 당시에 구독자가 없으므로 ..
+         * 방출이 모두 일어난 이후인 StepVerifier 가 구독하는 시점에는 데이터를 받을 수 없는 것이다.
+         *
+         * 그런데.. onBackpressureBuffer() 이므로 구독자가 없는 시점에 방출된 데이터도 버퍼에 적재가 되어야하는게 아닌가?
+         * -> 맞는 말이다. 그러나 tryEmitNext 때문에 동시성 이슈가 생겨서 대부분의 데이터가 유실된 것이다.
+         * Thread.sleep 을 주고 동시성 이슈가 생기지 않도록하면 정상적으로 받게 된다. 버퍼 사이즈를 30 개로 하면 30 개만 적재되어있어서..
+         * take(50).. 50 개를 모두 받을 때 까지 무한대기 상태가 된다.
+         *
+         */
+
+        for (int i = 1; i <= 50; i++) {
+            int finalI = i;
+//            try {
+//                Thread.sleep(100);
+//            } catch (InterruptedException e) {
+//                throw new RuntimeException(e);
+//            }
+            new Thread(
+                    () -> sink.tryEmitNext(finalI)
+            ).start();
+        }
+
+        //don't change code below
+        StepVerifier.create(sink.asFlux()
+                        .doOnNext(System.out::println)
+                        .take(50))
+                .expectNextCount(50)
+                .verifyComplete();
     }
 }

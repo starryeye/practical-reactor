@@ -75,10 +75,20 @@ public class c9_ExecutionControl extends ExecutionControlBase {
      */
     @Test
     public void ready_set_go() {
-        //todo: feel free to change code as you need
+
         Flux<String> tasks = tasks()
-                .flatMap(Function.identity());
-        semaphore();
+//                .concatMap(Function.identity()) // 이렇게 하면 반드시 순서 보장이 되긴함 c6, task_executor_again 참고 (대신, .expectNoEvent(Duration.ofMillis(2000)) 을 만족하지 못함)
+                .concatMap(task -> task.delaySubscription(semaphore()));
+
+        /**
+         * semaphore() 가 정한 딜레이에 맞춰서 Mono<String> 를 subscribe 한다.
+         *
+         * 즉, Mono<String> 이 3개가 순서대로 concatMap 으로 전달되고
+         * concatMap 으로 인해 1 개씩 전달된 item 이자 publisher 가 구독되기 시작하는데 구독할때 delaySubscription 으로 인해
+         * semaphore 가 정한 딜레이에 맞춰서 subscribe 가 이루어진다.
+         *
+         * concatMap 에 대한 정확한 동작은 c6, task_executor_again 를 보면 이해가 빠를 것이다.
+         */
 
         //don't change code below
         StepVerifier.create(tasks)

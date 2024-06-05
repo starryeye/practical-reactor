@@ -148,7 +148,8 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
     public void task_executor_again() {
 
         Flux<Void> tasks = taskExecutor()
-//                .flatMapSequential(Function.identity())
+                .log()
+//                .flatMapSequential(Function.identity());
                 .concatMap(Function.identity());
 
         /**
@@ -158,6 +159,29 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
          * 병렬가능, 병렬안됨, 병렬가능
          *
          * 마블 다이어그램을 보면 이해가 잘 될 것이다.
+         *
+         *
+         * 참고..
+         * flatMapSequential 으로 하면 가끔 발행순서가 꼬이고..
+         * concatMap 으로 하면 발행순서가 절대로 안꼬이는듯..
+         * 마블 다이어그램에서 봤을땐.. 두개의 연산자에 대한 동작은 병렬이 되냐 안되냐지만 결과는 동일할 것으로 생각했는데 .. 아니네..? 이유는..? 아래 상세 동작 분석 참조
+         *
+         * 동작 분석
+         * flatMapSequential 으로 하면..
+         * 1. StepVerifier 가 tasks 를 subscribe 한다.
+         * 2. taskExecutor 의 Flux.range(1, 10) 에서 1 부터 10 까지의 숫자들이 순차적으로 발행된다. (main 스레드)
+         * 3. taskExecutor 에서 map 으로 인해 Mono<Void> 라는 타입의 item 이.. 순차적으로 발행된다. (main 스레드) (그래서 타입이 Flux<Mono<Void>> 이다.)
+         * 4. 병렬로 전달된 item 이 사실 publisher 였고 flatMapSequential 로 전달된 순서에 따라 item 자기 자신을 subscribe 하여 발행한다. (identity)
+         * 5. 그런데.. item 이자 publisher 인 Mono<Void> 는 subscribeOn 으로 ParallelScheduler 에 의해 병렬적으로 수행된다.
+         * 6. item (각 내부에 1 부터 10 까지 숫자가 담김) 숫자 순서대로 전달 되었지만, 거의 동시에 item 이 전달되었고 ParallelScheduler 로 멀티 스레드로 구독을 시작하기 때문에 살짝 순서가 꼬일 수 있다.
+         * 7. Mono<Void> publisher 가 병렬적으로 수행되고 내부에서 또다른 item 을 발행하거나 하지 않으므로 외부로 onComplete 이벤트만 전달된다. (그래서 Mono<Void> 이다.)
+         * 8. 그러한 병렬적으로 onComplete 들이 발행되는 publisher 가 Flux<Void> 인 것이다. (tasks)
+         *
+         * concatMap 으로 하면..
+         * flatMapSequential 과 1 ~ 5 번이 동일하다. (4 번에서는 flatMapSequential 을 concatMap 으로 변경)
+         * 6. item (각 내부에 1 부터 10 까지 숫자가 담김) 숫자 순서대로 전달 되었고, 1 번이 수행 ParallelScheduler 으로 수행되는데 이때 concatMap 이므로 한번에 하나의 item 만 subscribe 한다.
+         * 즉, 1 번이 ParallelScheduler 로 수행되고 onComplete 발행이 되기 전까지는 절대로 2 번이 subscribe 될 수 없다.
+         * 따라서, 1 부터 10 까지의 순서가 반드시 보장될 수 있는 것이다.
          */
 
         //don't change below this line

@@ -162,11 +162,17 @@ public class c9_ExecutionControl extends ExecutionControlBase {
      */
     @Test
     public void blocking() {
+
+        // BlockHound 를 위해 -XX:+AllowRedefinitionToAddDeleteMethods 를 VM options 에 추가 해줘야함
         BlockHound.install(); //don't change this line
 
         Mono<Void> task = Mono.fromRunnable(ExecutionControlBase::blockingCall)
-                              .subscribeOn(Schedulers.single())//todo: change this line only
+                              .subscribeOn(Schedulers.boundedElastic())
                               .then();
+
+        /**
+         * 긴 블로킹 작업에 적합한 스레드
+         */
 
         StepVerifier.create(task)
                     .verifyComplete();

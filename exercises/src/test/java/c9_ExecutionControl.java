@@ -114,8 +114,42 @@ public class c9_ExecutionControl extends ExecutionControlBase {
                                   assert NonBlocking.class.isAssignableFrom(Thread.currentThread().getClass());
                                   System.out.println("Task executing on: " + currentThread.getName());
                               })
-                              //todo: change this line only
+                .subscribeOn(Schedulers.parallel())
                               .then();
+        /**
+         * assert NonBlocking.class.isAssignableFrom(Thread.currentThread().getClass());
+         * -> 현재 스레드가 NonBlocking 인터페이스를 구현한 스레드임을 확인하여, 작업이 NonBlocking 스레드에서 실행되고 있는지를 보장한다.
+         */
+
+        /**
+         * https://projectreactor.io/docs/core/release/reference/#schedulers
+         * 아래 scheduler 설명 외에도 virtualThread 에 관한 내용도 존재..
+         *
+         * Which types of schedulers Reactor provides?
+         * What is their purpose?
+         *	Schedulers.immediate(): 현재 스레드에서 즉시 작업을 실행한다.
+         * 	Schedulers.single(): 하나의 재사용 가능한 스레드에서 작업을 실행한다. 단일 스레드 작업에 적합하다. 재사용하고 싶지 않다면, Schedulers.newSingle() 이용
+         * 	Schedulers.elastic(): 각 작업마다 새로운 스레드를 생성하고(제한되지 않는 크기) 유휴 스레드를 재사용한다. I/O 바운드 작업에 적합하다. -> 사용하지 말고 boundedElastic 사용할 것을 추천
+         * 	Schedulers.parallel(): 고정 크기의 워커 스레드 풀(일반적으로 CPU 코어 수만큼)을 사용한다. CPU 바운드 작업에 적합하다.
+         * 	Schedulers.boundedElastic(): 블로킹 I/O 바운드 작업을 위해 제한된 크기의 탄력적인 스레드 풀을 생성한다.
+         * 	Schedulers.fromExecutorService(...): 커스텀 ExecutorService를 사용하여 작업을 스케줄링할 수 있다.
+         *
+         * What is their difference?
+         * 스레드 관리:
+         * 	Schedulers.immediate()는 현재 스레드에서 스위칭 없이 실행
+         * 	Schedulers.single()는 전용 스레드 하나에서 실행
+         * 	Schedulers.elastic()는 필요에 따라 동적으로 스레드를 생성하고 재사용하며 무한히 확장됨
+         * 	Schedulers.parallel()는 병렬 계산을 위한 고정된 수의 스레드를 사용
+         * 	Schedulers.boundedElastic()는 블로킹 작업을 위한 제한된 크기의 스레드 풀을 생성
+         * 	Schedulers.fromExecutorService(...)는 사용자 제공 ExecutorService를 사용하여 커스텀 스레드 관리를 수행
+         * 사용 사례:
+         * 	Schedulers.immediate()는 컨텍스트 전환이 필요 없는 매우 짧은 작업에 적합
+         * 	Schedulers.single()는 동일한 스레드에서 순차적으로 실행되어야 하는 작업에 유용
+         * 	Schedulers.elastic() 대신 boundedElastic 을 사용
+         * 	Schedulers.parallel()는 병렬 실행의 이점을 누릴 수 있는 CPU 바운드 작업에 적합
+         * 	Schedulers.boundedElastic()는 더 많은 스레드가 필요하지만 제한된 성장을 요구하는 블로킹 I/O 바운드 작업에 적합
+         * 	Schedulers.fromExecutorService(...)는 커스텀 실행 전략을 위한 유연성을 제공
+         */
 
         StepVerifier.create(task)
                     .verifyComplete();

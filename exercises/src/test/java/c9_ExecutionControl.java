@@ -214,10 +214,21 @@ public class c9_ExecutionControl extends ExecutionControlBase {
      */
     @Test
     public void sequential_free_runners() {
-        //todo: feel free to change code as you need
+
         Flux<String> tasks = tasks()
-                .flatMap(Function.identity());
-        ;
+                .flatMapSequential(Function.identity())
+                .doOnNext(System.out::println) //
+                ;
+
+        /**
+         * flatMap 주의사항.. (원래 문제 상태가 flatMap)
+         *  tasks() 내부에서 찍히는 로그 순서와 flatMap 에서 최종 방출되는 item 의 순서가 다르다..
+         *  -> todo, 이유 생각해보기
+         *
+         * flatMapSequential
+         *  얘도 flatMap 처럼 tasks() 내부에서 찍히는 로그 순서와 flatMapSequential 에서 최종 방출되는 item 순서가 다른데..
+         *  tasks() 에 Flux.just() 에서 넣은 순서를 flatMapSequential 에서 방출하는 순서로 보장해줌
+         */
 
         //don't change code below
         Duration duration = StepVerifier.create(tasks)

@@ -221,7 +221,7 @@ public class c9_ExecutionControl extends ExecutionControlBase {
                 ;
 
         /**
-         * flatMap 주의사항.. (원래 문제 상태가 flatMap)
+         * flatMap 주의사항.. (문제의 최초 상태가 flatMap 였다..)
          *  tasks() 내부에서 찍히는 로그 순서와 flatMap 에서 최종 방출되는 item 의 순서가 다르다..
          *  -> todo, 이유 생각해보기
          *

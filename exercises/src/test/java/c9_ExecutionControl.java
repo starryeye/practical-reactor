@@ -223,7 +223,8 @@ public class c9_ExecutionControl extends ExecutionControlBase {
         /**
          * flatMap 주의사항.. (문제의 최초 상태가 flatMap 였다..)
          *  tasks() 내부에서 찍히는 로그 순서와 flatMap 에서 최종 방출되는 item 의 순서가 다르다..
-         *  -> todo, 이유 생각해보기
+         *  -> todo, 이유 생각해보기..
+         *  -> 병렬적으로 tasks() 내부의 item 들이 실행되는데.. 그 실행순서가 꼭 방출 순서(flatMap 은 방출순서대로 방출)와 동일한 것은 아닌듯..
          *
          * flatMapSequential
          *  얘도 flatMap 처럼 tasks() 내부에서 찍히는 로그 순서와 flatMapSequential 에서 최종 방출되는 item 순서가 다른데..

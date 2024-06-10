@@ -245,15 +245,30 @@ public class c9_ExecutionControl extends ExecutionControlBase {
      * Make use of ParallelFlux to branch out processing of events in such way that:
      * - filtering events that have metadata, printing out metadata, and mapping to json can be done in parallel.
      * Then branch in before appending events to store. `appendToStore` must be invoked sequentially!
+     *
+     * ->
+     * 메타데이터가 있는 이벤트를 필터링하고, 메타데이터를 출력하며, JSON으로 매핑하는 작업을 병렬로 수행하십시오.
+     * 그런 다음 이벤트를 스토어에 추가하기 전에 다시 합치십시오. appendToStore는 순차적으로 호출되어야 합니다!
      */
     @Test
     public void event_processor() {
-        //todo: feel free to change code as you need
+
         Flux<String> eventStream = eventProcessor()
+                .parallel()
+                .runOn(Schedulers.parallel())
                 .filter(event -> event.metaData.length() > 0)
                 .doOnNext(event -> System.out.println("Mapping event: " + event.metaData))
                 .map(this::toJson)
+                .sequential()
                 .concatMap(n -> appendToStore(n).thenReturn(n));
+
+        // todo, 아래와 동일한가요? 로그 찍히는 거 보면 살짝 매커니즘이 다른 듯한데..
+//        Flux<String> eventStream = eventProcessor()
+//                .filter(event -> event.metaData.length() > 0)
+//                .doOnNext(event -> System.out.println("Mapping event: " + event.metaData))
+//                .flatMapSequential(event -> Mono.fromCallable(() -> toJson(event))
+//                        .subscribeOn(Schedulers.parallel()))
+//                .concatMap(n -> appendToStore(n).thenReturn(n));
 
         //don't change code below
         StepVerifier.create(eventStream)

@@ -166,7 +166,7 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
          * concatMap 으로 하면 발행순서가 절대로 안꼬이는듯..
          * 마블 다이어그램에서 봤을땐.. 두개의 연산자에 대한 동작은 병렬이 되냐 안되냐지만 결과는 동일할 것으로 생각했는데 .. 아니네..? 이유는..? 아래 상세 동작 분석 참조
          *
-         * 동작 분석
+         * 동작 분석 todo, 이거 다시 분석해야함..
          * flatMapSequential 으로 하면..
          * 1. StepVerifier 가 tasks 를 subscribe 한다.
          * 2. taskExecutor 의 Flux.range(1, 10) 에서 1 부터 10 까지의 숫자들이 순차적으로 발행된다. (main 스레드)

@@ -182,6 +182,11 @@ public class c6_CombiningPublishers extends CombiningPublishersBase {
          * 6. item (각 내부에 1 부터 10 까지 숫자가 담김) 숫자 순서대로 전달 되었고, 1 번이 수행 ParallelScheduler 으로 수행되는데 이때 concatMap 이므로 한번에 하나의 item 만 subscribe 한다.
          * 즉, 1 번이 ParallelScheduler 로 수행되고 onComplete 발행이 되기 전까지는 절대로 2 번이 subscribe 될 수 없다.
          * 따라서, 1 부터 10 까지의 순서가 반드시 보장될 수 있는 것이다.
+         *
+         *
+         * todo, 아래 내용 포함
+         * 	flatMapSequential은 각 아이템을 병렬로 처리하지만, 방출 순서를 유지하기 위해 내부적으로 큐잉을 사용한다. 이는 병렬로 실행되기 때문에 실행 순서는 섞일 수 있다.
+         * 	concatMap은 각 아이템을 순차적으로 처리하여, 하나의 아이템이 완료될 때까지 다음 아이템을 처리하지 않으므로 실행 순서와 방출 순서가 보장된다.
          */
 
         //don't change below this line

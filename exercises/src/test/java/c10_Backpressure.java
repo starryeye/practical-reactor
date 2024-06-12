@@ -71,8 +71,15 @@ public class c10_Backpressure extends BackpressureBase {
     public void limited_demand() {
         CopyOnWriteArrayList<Long> requests = new CopyOnWriteArrayList<>();
         Flux<String> messageStream = messageStream2()
-                //todo: do your changes here
+                .doOnRequest(requests::add)
+                .limitRate(1)
                 ;
+        /**
+         * limitRate..
+         * upstream 방향으로 적용되는 연산자이다. (doOnRequest 와 limitRate 순서를 변경하면 다른 결과가 나오는 것을 볼 수 있다.)
+         * 2 개를 요청했는데 1 개로 제한(limitRate(1)) 해두면 1 개 아이템이 방출되면 다시 1 개 요청하는 방식이다.
+         * 마블다이어그램 참고하면 쉬움
+         */
 
         StepVerifier.create(messageStream, StepVerifierOptions.create().initialRequest(0))
                     .expectSubscription()

@@ -14,6 +14,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.LongStream;
 
 /**
  * Backpressure is a mechanism that allows a consumer to signal to a producer that it is ready receive data.
@@ -95,14 +96,18 @@ public class c10_Backpressure extends BackpressureBase {
     }
 
     /**
-     * Finish the implementation of the `uuidGenerator` so it exactly requested amount of UUIDs. Or better said, it
-     * should respect the backpressure of the consumer.
+     * Finish the implementation of the `uuidGenerator` so it exactly requested amount of UUIDs.
+     * Or better said, it should respect the backpressure of the consumer.
      */
     @Test
     public void uuid_generator() {
         Flux<UUID> uuidGenerator = Flux.create(sink -> {
-            //todo: do your changes here
+            sink.onRequest(r -> {
+                LongStream.range(0, r)
+                        .forEach(i -> sink.next(UUID.randomUUID()));
+            });
         });
+        // request 한 값(r) 만큼 UUID 를 생산해서 방출 해준다.
 
         StepVerifier.create(uuidGenerator
                                     .doOnNext(System.out::println)

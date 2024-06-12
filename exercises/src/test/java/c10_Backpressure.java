@@ -128,8 +128,18 @@ public class c10_Backpressure extends BackpressureBase {
     @Test
     public void pressure_is_too_much() {
         Flux<String> messageStream = messageStream3()
-                //todo: change this line only
+                .onBackpressureError()
                 ;
+
+        /**
+         * onBackpressureError..
+         * 마블다이어그램을 보면 쉬운데..
+         * 검문소 같은 역할을 한다.
+         * upstream 방향으로 전달된 request 이벤트의 값이 2 개인데..
+         * 모종의 이유로 item 이 2 개를 초과하여 전달 되는게 onBackpressureError 에서 확인하면
+         * onBackpressureError 에서는 3 번째 item 을 전달하지 않고 downstream 으로는 OverflowException (failWithOverflow)을 전달하고
+         * publisher 는 cancel 시킨다.
+         */
 
         StepVerifier.create(messageStream, StepVerifierOptions.create()
                                                               .initialRequest(0))

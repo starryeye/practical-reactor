@@ -47,7 +47,7 @@ public class c10_Backpressure extends BackpressureBase {
     public void request_and_demand() {
         CopyOnWriteArrayList<Long> requests = new CopyOnWriteArrayList<>();
         Flux<String> messageStream = messageStream1()
-                //todo: change this line only
+                .doOnRequest(requests::add) // request 이벤트를 hooking 하여, 요청된 값을 requests 에 넣는다.
                 ;
 
         StepVerifier.create(messageStream, StepVerifierOptions.create().initialRequest(0))

@@ -200,7 +200,7 @@ public class c10_Backpressure extends BackpressureBase {
         remoteMessageProducer()
                 .doOnCancel(() -> lockRef.get().countDown())
                 .subscribeWith(new BaseSubscriber<String>() {
-                    //todo: do your changes only within BaseSubscriber class implementation
+
                     @Override
                     protected void hookOnSubscribe(Subscription subscription) {
                         sub.set(subscription);

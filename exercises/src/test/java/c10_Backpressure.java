@@ -159,8 +159,16 @@ public class c10_Backpressure extends BackpressureBase {
     @Test
     public void u_wont_brake_me() {
         Flux<String> messageStream = messageStream4()
-                //todo: change this line only
+                .onBackpressureBuffer()
                 ;
+        /**
+         * onBackpressureBuffer..
+         * 마블 다이어그램을 보면 쉽다.
+         * onBackpressureError 처럼 검문소 역할이다.
+         * upstream 방향으로 전달된 request 이벤트의 값이 2 개인데..
+         * 모종의 이유로 item 이 2 개를 초과하여 전달 되는게 onBackpressureBuffer 에서 확인하면
+         * onBackpressureBuffer 에서 버퍼에 담아 두고 다음 request 이벤트가 오면 그만큼 방출해준다.
+         */
 
         StepVerifier.create(messageStream, StepVerifierOptions.create()
                                                               .initialRequest(0))

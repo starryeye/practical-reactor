@@ -50,9 +50,17 @@ public class c11_Batching extends BatchingBase {
     @Test
     public void command_gateway() {
         //todo: implement your changes here
-        Flux<Void> processCommands = null;
-        inputCommandStream();
-        sendCommand(null);
+        Flux<Void> processCommands = inputCommandStream()
+                .groupBy(Command::getAggregateId)
+                .flatMap(groupedFlux -> groupedFlux.concatMap(command -> sendCommand(command)));
+
+        /**
+         * groupBy 파라미터로 전달된 함수를 바탕으로 동일한 결과값이면 같은 그룹으로 묶어서 flux 로 만든다.
+         * 즉, 동일한 결과끼리 묶어서 여러개의 flux(GroupFlux) 를 방출한다. (각 flux 내부에는 분류된 Command 가 있겠지..)
+         *
+         * 해당 flux 를 flatMap 을 통해 병렬적으로 수행한다.
+         * 각 command 는 concatMap 을 통해 sendCommand 를 수행하도록 해준다.
+         */
 
         //do not change the code below
         Duration duration = StepVerifier.create(processCommands)

@@ -76,9 +76,23 @@ public class c11_Batching extends BatchingBase {
      */
     @Test
     public void sum_over_time() {
-        Flux<Long> metrics = metrics()
-                //todo: implement your changes here
+        Flux<Long> metrics = metrics() // 0.095 초 마다 0 부터 시작해서 1 씩 증가되는 값이 방출된다.
+                .window(Duration.ofSeconds(1L)) // 1 초 단위로 방출되는 값을 묶어서 하나의 publisher 를 방출한다.
+                .concatMap(window -> window
+                        .doOnSubscribe(subscription -> System.out.println("New window start"))
+                        .doOnNext(item -> System.out.println("Window item: " + item))
+                        .doOnTerminate(() -> System.out.println("Window terminated"))
+                        .reduce(0L, Long::sum)
+                ) // 위에서 방출된 publisher 각각에 reduce 연산자를 수행시킨다.
                 .take(10);
+
+        /**
+         * window..
+         * window 는 groupBy 의 특수 케이스 인듯하다. 어떤 조건 없이 오는 순서대로 묶어서 flux 로 만들어 방출한다.
+         *
+         * reduce..
+         * flux 를 Mono 로 만든다. 여기서는 0 부터 시작한 값에 sum 을 수행시켜 해당 flux 의 item 을 모두 더함
+         */
 
         StepVerifier.create(metrics)
                     .expectNext(45L, 165L, 255L, 396L, 465L, 627L, 675L, 858L, 885L, 1089L)

@@ -61,11 +61,14 @@ public class c11_Batching extends BatchingBase {
          * 해당 flux 를 flatMap 을 통해 병렬적으로 수행한다.
          * 각 command 는 concatMap 을 통해 sendCommand 를 수행하도록 해준다.
          *
-         * todo,
-         *  문제의 조건에 따르면.. aggregateId 가 다르면 병렬 수행이 가능한데.. 같으면 순차적으로 수행하도록 구현해라고 하였다.
-         *  그래서, groupedFlux.concatMap 이 정답이긴 하나..
-         *  groupedFlux.flatMapSequential 도 맞을 듯?? 하다.. 속도도 훨씬 빠르고(로그 찍히는 속도도 체감됨)..
-         *  flatMapSequential 도 정답일까? 그리고 왜 concatMap 과 로그 찍히는 패턴이 좀 다른데 왜그럴까..?
+         *
+         * 문제의 조건에 따르면.. aggregateId 가 다르면 병렬 수행이 가능한데.. 같으면 순차적으로 수행하도록 구현해라고 하였다.
+         * 그래서, groupedFlux.concatMap 이 정답이긴 하나..
+         * groupedFlux.flatMapSequential 도 맞을 듯?? 하다.. 속도도 훨씬 빠르고(로그 찍히는 속도도 체감됨)..
+         * flatMapSequential 도 정답일까? 그리고 왜 concatMap 과 로그 찍히는 패턴이 좀 다른데 왜그럴까..?
+         * ->
+         * flatMapSequential 은 정답이 아니다. flatMapSequential 과 concatMap 에서 방출되는 값은 순차적으로 방출되므로 동일하지만..
+         * flatMapSequential 은 sendCommand 를 병렬적으로 수행해버리므로 문제의 조건에 부합하지 않는다.
          *
          */
 

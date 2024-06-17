@@ -32,8 +32,26 @@ public class c12_Broadcasting extends BroadcastingBase {
     @Test
     public void sharing_is_caring() throws InterruptedException {
         Flux<Message> messages = messageStream()
-                //todo: do your changes here
+                .publish()
+                .refCount(2)
                 ;
+        /**
+         * publish()..
+         * Flux 를 ConnectableFlux 로 바꾸어주고, 여러 구독자에게 동일한 item 을 제공해주는 hot publisher 로 사용되게끔 해준다.
+         *
+         * ConnectableFlux 의 연산자..
+         * - autoConnect() : 지정된 수의 subscriber 가 connect 될 때 sequence 를 시작하며,
+         *      모든 subscriber 가 해제되면 sequence 를 중지하고, 다시 지정된 수의 subscriber 가 connect 되면 기존 sequence 를 이어서 시작한다. (이어서 시작)
+         * - refCount() : 지정된 수의 subscriber 가 connect 될 때 sequence 를 시작하며,
+         *      모든 subscriber 가 해제되면 sequence 를 중지하고, 다시 지정된 수의 subscriber 가 connect 되면 새로운 sequence 를 시작한다. (다시 처음부터 시작)
+         * - share() : publish().refCount(1)의 단축형
+         *      최소 한 명의 subscriber 가 connect 되면 sequence 를 시작하고, 모든 subscriber 가 해제되면 sequence 를 중지한다.
+         *
+         *
+         * 참고.. (내 느낌)
+         * map() 에서 sink 를 사용해서 좀더 이벤트나 item 을 좀더 세밀하게 방출할 수 있도록 한게 handle() 연산자 라면..
+         * publish(), refCount() 의 그러한 버전이 Sinks.many().multicast() 인듯 하다..
+         */
 
         //don't change code below
         Flux<String> userStream = messages.map(m -> m.user);

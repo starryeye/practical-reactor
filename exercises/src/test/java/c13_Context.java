@@ -31,8 +31,11 @@ public class c13_Context extends ContextBase {
      * id to the Reactor context. Your task is to extract the correlation id and attach it to the message object.
      */
     public Mono<Message> messageHandler(String payload) {
-        //todo: do your changes withing this method
-        return Mono.just(new Message("set correlation_id from context here", payload));
+
+        return Mono.deferContextual(contextView -> { // defer 에서 contextView 를 파라미터로 넣어주는 연산자이다.
+            String correlationId = contextView.get(HTTP_CORRELATION_ID);
+            return Mono.just(new Message(correlationId, payload));
+        });
     }
 
     @Test

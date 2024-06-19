@@ -60,16 +60,15 @@ public class c13_Context extends ContextBase {
                     System.out.println("context = " + i);
                     return openConnection();
         })
-//                .contextWrite(context -> context.put(AtomicInteger.class, new AtomicInteger(0)))
-//                .contextWrite(Context.of(AtomicInteger.class, new AtomicInteger(0)))
+//                .contextWrite(context -> context.put(AtomicInteger.class, new AtomicInteger(0))) // 덮어쓰기가 되어서 테스트 통과 안됨
+                .contextWrite(Context.of(AtomicInteger.class, new AtomicInteger(0))) // 정답
                 ;
         /**
-         * todo,
-         *  .contextWrite(context -> context.put(AtomicInteger.class, new AtomicInteger(0)))
-         *  .contextWrite(Context.of(AtomicInteger.class, new AtomicInteger(0)))
-         *  왜 둘의 차이가 생기는지 모르겠음..
          *
-         * 공식문서 피셜..
+         * .contextWrite(context -> context.put(AtomicInteger.class, new AtomicInteger(0)))
+         * .contextWrite(Context.of(AtomicInteger.class, new AtomicInteger(0)))
+         * 왜 둘의 차이가 생기는지 모르겠음..
+         * -> 공식문서 피셜..
          * https://projectreactor.io/docs/core/release/reference/#context
          * https://projectreactor.io/docs/core/release/api/reactor/util/context/Context.html#putAll-reactor.util.context.ContextView-
          *  Use put(Object key, Object value) to store a key-value pair, returning a new Context instance.

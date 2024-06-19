@@ -68,6 +68,15 @@ public class c13_Context extends ContextBase {
          *  .contextWrite(context -> context.put(AtomicInteger.class, new AtomicInteger(0)))
          *  .contextWrite(Context.of(AtomicInteger.class, new AtomicInteger(0)))
          *  왜 둘의 차이가 생기는지 모르겠음..
+         *
+         * 공식문서 피셜..
+         * https://projectreactor.io/docs/core/release/reference/#context
+         * https://projectreactor.io/docs/core/release/api/reactor/util/context/Context.html#putAll-reactor.util.context.ContextView-
+         *  Use put(Object key, Object value) to store a key-value pair, returning a new Context instance.
+         *  You can also merge two contexts into a new one by using putAll(ContextView).
+         *  -> put 은 확실히 덮어쓰기가 되는 듯하고, putAll 은 merge 를 수행한다는데 위 현상이 말이 되려면..
+         *      기존의 context 에 동일한 Key 가 존재하면 병합 대상 context 를 버리는 방식이어야 한다..
+         *      더이상 검색은 안되네..
          */
 
         StepVerifier.create(repeat.repeat(4))

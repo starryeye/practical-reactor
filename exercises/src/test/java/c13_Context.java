@@ -56,11 +56,19 @@ public class c13_Context extends ContextBase {
     @Test
     public void execution_counter() {
         Mono<Void> repeat = Mono.deferContextual(ctx -> {
-            ctx.get(AtomicInteger.class).incrementAndGet();
-            return openConnection();
-        });
-        //todo: change this line only
-        ;
+                    int i = ctx.get(AtomicInteger.class).incrementAndGet();
+                    System.out.println("context = " + i);
+                    return openConnection();
+        })
+//                .contextWrite(context -> context.put(AtomicInteger.class, new AtomicInteger(0)))
+//                .contextWrite(Context.of(AtomicInteger.class, new AtomicInteger(0)))
+                ;
+        /**
+         * todo,
+         *  .contextWrite(context -> context.put(AtomicInteger.class, new AtomicInteger(0)))
+         *  .contextWrite(Context.of(AtomicInteger.class, new AtomicInteger(0)))
+         *  왜 둘의 차이가 생기는지 모르겠음..
+         */
 
         StepVerifier.create(repeat.repeat(4))
                     .thenAwait(Duration.ofSeconds(10))

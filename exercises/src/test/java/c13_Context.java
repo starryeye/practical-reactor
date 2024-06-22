@@ -1,11 +1,13 @@
 import org.junit.jupiter.api.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.SignalType;
 import reactor.test.StepVerifier;
 import reactor.util.context.Context;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 /**
  * Often we might require state when working with complex streams. Reactor offers powerful context mechanism to share
@@ -96,14 +98,40 @@ public class c13_Context extends ContextBase {
      */
     @Test
     public void pagination() {
-        AtomicInteger pageWithError = new AtomicInteger(); //todo: set this field when error occurs
 
-        //todo: start from here
+        AtomicInteger pageWithError = new AtomicInteger(); // set this field when error occurs
+
+        // 문제 원본
         Flux<Integer> results = getPage(0)
                 .flatMapMany(Page::getResult)
                 .repeat(10)
                 .doOnNext(i -> System.out.println("Received: " + i));
 
+        // 이렇게 하면 되지 않을까 해서 시도해봄..
+//        Flux<Integer> results = Mono.deferContextual(contextView -> {
+//            int pageNumber = contextView.get(AtomicInteger.class).incrementAndGet();
+//            return getPage(pageNumber);
+//        }).flatMapMany(Page::getResult)
+//                        .doOnError(throwable -> {}) // 에러가 났을 경우 로깅 처리와 pageWithError 에 pageNumber(context) 를 저장 해줘야하는데 doOnError 연산자로는 할 수 없다..
+
+        // 이렇게 하면 되지 않을까 해서 시도해봄.. 2 todo, 뭐가 잘못 된거지..
+//        Flux<Integer> results = Mono.create(monoSink -> {
+//
+//            int pageNumber = monoSink.currentContext().get(AtomicInteger.class).incrementAndGet();
+//
+//            Flux<Integer> integerFlux = getPage(pageNumber)
+//                    .flatMapMany(Page::getResult)
+//                    .doOnError(throwable -> {
+//                        pageWithError.set(pageNumber);
+//                        System.out.println("Error: " + throwable.getMessage() + ", page: " + pageNumber);
+//                    })
+//                    .onErrorResume(throwable -> Flux.empty());
+//
+//            monoSink.success(integerFlux);
+//        })
+//                .flatMap(Function::identity)
+//                .repeat(10)
+//                .contextWrite(Context.of(AtomicInteger.class, new AtomicInteger(0)));
 
         //don't change this code
         StepVerifier.create(results)

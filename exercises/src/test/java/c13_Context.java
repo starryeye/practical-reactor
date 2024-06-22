@@ -132,6 +132,12 @@ public class c13_Context extends ContextBase {
 //                .flatMapMany(Function::identity) // Mono<Flux<Integer>> 에서 Flux<Integer> 를 수행하면서 나오는 아이템과 이벤트를 방출한다.
 //                .repeat(10)
 //                .contextWrite(Context.of(AtomicInteger.class, new AtomicInteger(0)));
+        /**
+         * 위에서 Function::identity 로 하면 컴파일 에러가 나는데.. 대신.. o -> (Flux<Integer>) o 로 작성하면 되긴한다.
+         * todo
+         *  1. 왜 직접 캐스팅을 해야 컴파일 에러가 나는가..
+         *  2. 직접 캐스팅하는 것으로 해결을 해도 테스트 통과가 안된다. 이유 찾아보자
+         */
 
         //don't change this code
         StepVerifier.create(results)

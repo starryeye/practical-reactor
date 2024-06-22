@@ -129,7 +129,7 @@ public class c13_Context extends ContextBase {
 //
 //            monoSink.success(integerFlux);
 //        })
-//                .flatMap(Function::identity)
+//                .flatMapMany(Function::identity) // Mono<Flux<Integer>> 에서 Flux<Integer> 를 수행하면서 나오는 아이템과 이벤트를 방출한다.
 //                .repeat(10)
 //                .contextWrite(Context.of(AtomicInteger.class, new AtomicInteger(0)));
 

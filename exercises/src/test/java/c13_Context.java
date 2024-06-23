@@ -115,24 +115,72 @@ public class c13_Context extends ContextBase {
 //                        .doOnError(throwable -> {}) // 에러가 났을 경우 로깅 처리와 pageWithError 에 pageNumber(context) 를 저장 해줘야하는데 doOnError 연산자로는 할 수 없다..
 
         // 이렇게 하면 되지 않을까 해서 시도해봄.. 2
-        Flux<Integer> results = Mono.create(monoSink -> {
+//        Flux<Integer> results = Mono.create(monoSink -> {
+//
+//            int pageNumber = monoSink.currentContext().get(AtomicInteger.class).getAndIncrement();
+//
+//            Flux<Integer> integerFlux = getPage(pageNumber)
+//                    .doOnError(throwable -> { // todo 이게 동작하지 않는데.. 이유는?
+//                        pageWithError.set(pageNumber);
+//                        System.out.println("Error: " + throwable.getMessage() + ", page: " + pageNumber);
+//                    })
+//                    .onErrorResume(throwable -> Mono.empty()) // empty 를 발행하면 getResult 는 안하는 것인가..? -> 바로 완료 이벤트 방출이라 flatMapMany 도 getResult 를 동작하지 않고 완료처리한다.
+//                    .flatMapMany(Page::getResult);
+//
+//            monoSink.success(integerFlux);
+//        })
+//                .flatMapMany(o -> (Flux<Integer>) o) // todo, 얘를 Function::identity 로 하면 컴파일 에러가 난다.. 이유는?
+//                .repeat(10)
+//                .doOnNext(i -> System.out.println("Received: " + i))
+//                .contextWrite(Context.of(AtomicInteger.class, new AtomicInteger(0)));
 
-            int pageNumber = monoSink.currentContext().get(AtomicInteger.class).getAndIncrement();
+        // 이렇게 하면 되지 않을까 해서 시도해봄.. 3
+//        Flux<Integer> results = Flux.deferContextual(contextView -> {
+//                    AtomicInteger atomicInteger = contextView.get(AtomicInteger.class);
+//                    int pageNumber = atomicInteger.getAndIncrement();
+//
+//                    return getPage(pageNumber)
+//                            .onErrorResume(throwable -> { // todo, 여전히 동작하지 않음.. 이유는?
+//                                pageWithError.set(pageNumber);
+//                                System.out.println("Error: " + throwable.getMessage() + ", page: " + pageNumber);
+//                                return Mono.empty();
+//                            })
+//                            .flatMapMany(Page::getResult);
+//                })
+//                .repeat(10)
+//                .doOnNext(i -> System.out.println("Received: " + i))
+//                .contextWrite(Context.of(AtomicInteger.class, new AtomicInteger(0)));
+        /**
+         * 위의 todo 에 해당하는 의문점들에 대한 이유.. (해결)
+         * -> getPage 를 실행하면 Mono.just(new Page(~~)) 를 실행한다.
+         * Mono.just 가 실행되기 전에 new Page 가 실행되고 여기서 Exception 이 발생된다.
+         * 따라서, Exception 이 발생하면 Mono.just 로 시작되는 downstream 으로 에러가 전파되는게 아니라..
+         * Mono.create, Mono.deferContextual 자체에서 Exception 이 발생한 케이스가 되어서 doOnError, onErrorResume 에서 잡을 수 없고
+         * 2 번에서는..
+         * .flatMapMany(o -> (Flux<Integer>) o)
+         * 3 번에서는..
+         * .repeat(10)
+         * 바로 위에서 doOnError, onErrorResume 등으로 잡아야 된다.
+         * Function::identity 로 할 수 없는 이유도 마찬가지로 위 stream 에서 에러를 잡아놓지 않아서 T 타입이 특정되지 않아 Object 가 되어 직접 캐스팅 해야하는 듯..
+         */
 
-            Flux<Integer> integerFlux = getPage(pageNumber)
-                    .doOnError(throwable -> { // todo 이게 동작하지 않는데.. 이유는?
-                        pageWithError.set(pageNumber);
-                        System.out.println("Error: " + throwable.getMessage() + ", page: " + pageNumber);
-                    })
-                    .onErrorResume(throwable -> Mono.empty()) // todo, empty 를 발행하면 getResult 는 안하는 것인가..?
-                    .flatMapMany(Page::getResult);
-
-            monoSink.success(integerFlux);
-        })
-                .flatMapMany(o -> (Flux<Integer>) o) // todo, 얘를 Function::identity 로 하면 컴파일 에러가 난다.. 이유는?
+        // 정답
+        Flux<Integer> results = Mono.deferContextual(ctx -> getPage(ctx.get(AtomicInteger.class).get()))
+                .doOnEach(s -> {
+                    if (s.getType() == SignalType.ON_NEXT) {
+                        s.getContextView().get(AtomicInteger.class).incrementAndGet();
+                    } else if (s.getType() == SignalType.ON_ERROR) {
+                        pageWithError.set(s.getContextView().get(AtomicInteger.class).get());
+                        System.out.println("Error has occurred: " + s.getThrowable().getMessage());
+                        System.out.println("Error occurred at page: " + s.getContextView().get(AtomicInteger.class).getAndIncrement());
+                    }
+                })
+                .onErrorResume(e -> Mono.empty())
+                .flatMapMany(Page::getResult)
                 .repeat(10)
                 .doOnNext(i -> System.out.println("Received: " + i))
                 .contextWrite(Context.of(AtomicInteger.class, new AtomicInteger(0)));
+
 
         //don't change this code
         StepVerifier.create(results)

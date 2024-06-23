@@ -102,10 +102,10 @@ public class c13_Context extends ContextBase {
         AtomicInteger pageWithError = new AtomicInteger(); // set this field when error occurs
 
         // 문제 원본
-        Flux<Integer> results = getPage(0)
-                .flatMapMany(Page::getResult)
-                .repeat(10)
-                .doOnNext(i -> System.out.println("Received: " + i));
+//        Flux<Integer> results = getPage(0)
+//                .flatMapMany(Page::getResult)
+//                .repeat(10)
+//                .doOnNext(i -> System.out.println("Received: " + i));
 
         // 이렇게 하면 되지 않을까 해서 시도해봄..
 //        Flux<Integer> results = Mono.deferContextual(contextView -> {
@@ -114,30 +114,25 @@ public class c13_Context extends ContextBase {
 //        }).flatMapMany(Page::getResult)
 //                        .doOnError(throwable -> {}) // 에러가 났을 경우 로깅 처리와 pageWithError 에 pageNumber(context) 를 저장 해줘야하는데 doOnError 연산자로는 할 수 없다..
 
-        // 이렇게 하면 되지 않을까 해서 시도해봄.. 2 todo, 뭐가 잘못 된거지..
-//        Flux<Integer> results = Mono.create(monoSink -> {
-//
-//            int pageNumber = monoSink.currentContext().get(AtomicInteger.class).incrementAndGet();
-//
-//            Flux<Integer> integerFlux = getPage(pageNumber)
-//                    .flatMapMany(Page::getResult)
-//                    .doOnError(throwable -> {
-//                        pageWithError.set(pageNumber);
-//                        System.out.println("Error: " + throwable.getMessage() + ", page: " + pageNumber);
-//                    })
-//                    .onErrorResume(throwable -> Flux.empty());
-//
-//            monoSink.success(integerFlux);
-//        })
-//                .flatMapMany(Function::identity) // Mono<Flux<Integer>> 에서 Flux<Integer> 를 수행하면서 나오는 아이템과 이벤트를 방출한다.
-//                .repeat(10)
-//                .contextWrite(Context.of(AtomicInteger.class, new AtomicInteger(0)));
-        /**
-         * 위에서 Function::identity 로 하면 컴파일 에러가 나는데.. 대신.. o -> (Flux<Integer>) o 로 작성하면 되긴한다.
-         * todo
-         *  1. 왜 직접 캐스팅을 해야 컴파일 에러가 나는가..
-         *  2. 직접 캐스팅하는 것으로 해결을 해도 테스트 통과가 안된다. 이유 찾아보자
-         */
+        // 이렇게 하면 되지 않을까 해서 시도해봄.. 2
+        Flux<Integer> results = Mono.create(monoSink -> {
+
+            int pageNumber = monoSink.currentContext().get(AtomicInteger.class).getAndIncrement();
+
+            Flux<Integer> integerFlux = getPage(pageNumber)
+                    .doOnError(throwable -> { // todo 이게 동작하지 않는데.. 이유는?
+                        pageWithError.set(pageNumber);
+                        System.out.println("Error: " + throwable.getMessage() + ", page: " + pageNumber);
+                    })
+                    .onErrorResume(throwable -> Mono.empty()) // todo, empty 를 발행하면 getResult 는 안하는 것인가..?
+                    .flatMapMany(Page::getResult);
+
+            monoSink.success(integerFlux);
+        })
+                .flatMapMany(o -> (Flux<Integer>) o) // todo, 얘를 Function::identity 로 하면 컴파일 에러가 난다.. 이유는?
+                .repeat(10)
+                .doOnNext(i -> System.out.println("Received: " + i))
+                .contextWrite(Context.of(AtomicInteger.class, new AtomicInteger(0)));
 
         //don't change this code
         StepVerifier.create(results)

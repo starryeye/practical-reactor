@@ -165,17 +165,17 @@ public class c13_Context extends ContextBase {
          */
 
         // 정답
-        Flux<Integer> results = Mono.deferContextual(ctx -> getPage(ctx.get(AtomicInteger.class).get()))
-                .doOnEach(s -> {
-                    if (s.getType() == SignalType.ON_NEXT) {
-                        s.getContextView().get(AtomicInteger.class).incrementAndGet();
-                    } else if (s.getType() == SignalType.ON_ERROR) {
-                        pageWithError.set(s.getContextView().get(AtomicInteger.class).get());
-                        System.out.println("Error has occurred: " + s.getThrowable().getMessage());
-                        System.out.println("Error occurred at page: " + s.getContextView().get(AtomicInteger.class).getAndIncrement());
+        Flux<Integer> results = Mono.deferContextual(contextView -> getPage(contextView.get(AtomicInteger.class).get()))
+                .doOnEach(signal -> {
+                    if (signal.getType() == SignalType.ON_NEXT) {
+                        signal.getContextView().get(AtomicInteger.class).incrementAndGet();
+                    } else if (signal.getType() == SignalType.ON_ERROR) {
+                        pageWithError.set(signal.getContextView().get(AtomicInteger.class).get());
+                        System.out.println("Error has occurred: " + signal.getThrowable().getMessage());
+                        System.out.println("Error occurred at page: " + signal.getContextView().get(AtomicInteger.class).getAndIncrement());
                     }
                 })
-                .onErrorResume(e -> Mono.empty())
+                .onErrorResume(throwable -> Mono.empty())
                 .flatMapMany(Page::getResult)
                 .repeat(10)
                 .doOnNext(i -> System.out.println("Received: " + i))
